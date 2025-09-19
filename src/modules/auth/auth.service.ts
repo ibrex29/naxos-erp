@@ -23,48 +23,15 @@ export class AuthService {
     return apiKeys.find((key) => apiKey === key);
   }
 
-  async validateByMatricNumber(matricNumber: string, password: string): Promise<any> {
-    const user = await this.userService.findUserByMatricNumber(matricNumber);
-    if (!user) return null;
 
-    const isMatch = await this.cryptoService.comparePassword(password, user.password);
-    if (!isMatch) return null;
-
-    const { password: _, ...result } = user;
-    return result;
-  }
-
-  //   async validateByLga(lga: string, password: string): Promise<any> {
-  //   const user = await this.userService.findUserByLga(lga);
-  //   if (!user) return null;
-
-  //   const isMatch = await this.cryptoService.comparePassword(password, user.password);
-  //   if (!isMatch) return null;
-
-  //   const { password: _, ...result } = user;
-  //   return result;
-  // }
 
 async validateUser(identifier: string, inputtedPassword: string) {
   let user = null;
 
-  // Try Email
   if (!user) {
     user = await this.userService.findUserByEmail(identifier);
     if (user) console.log(`[AuthService] Login attempt with EMAIL: ${identifier}`);
   }
-
-  // Try Matric Number
-  if (!user) {
-    user = await this.userService.findUserByMatricNumber(identifier);
-    if (user) console.log(`[AuthService] Login attempt with MATRIC: ${identifier}`);
-  }
-
-  // // Optional: Try LGA
-  // if (!user) {
-  //   user = await this.userService.findUserByLga(identifier);
-  //   if (user) console.log(`[AuthService] Login attempt with LGA: ${identifier}`);
-  // }
 
   if (!user) {
     console.warn(`[AuthService] No user found for identifier: ${identifier}`);

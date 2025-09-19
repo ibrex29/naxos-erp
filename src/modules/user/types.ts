@@ -1,12 +1,5 @@
 export enum UserType {
-  ADMIN = 'admin',
-  USER = 'user',
-  ALUMNI = 'alumni',
-  STAFF = 'staff',
-}
-
-export enum UserConnectionStatus  {
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
+  SUPER_ADMIN = 'super-admin',
+  SALES_ADMIN = 'sales-admin',
+  WHAREHOUSE_ADMIN = 'wharehouse-admin',
 }

@@ -54,13 +54,6 @@ export class UserService {
           },
         },
       },
-      include: {
-        profile: {
-          include: {
-            academics: true,
-          },
-        },
-      },
     });
 
     delete createdUser.password;

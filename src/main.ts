@@ -43,14 +43,14 @@ async function bootstrap() {
 
 
   const options = new DocumentBuilder()
-    .setTitle('SLU Alumni Backend API')
+    .setTitle('Naxos ERP Backend API')
     .setDescription('')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('documentation', app, document);
+  SwaggerModule.setup('docs', app, document);
 
   await app.listen(parseInt(process.env.PORT, 10) || 3000);
   console.log(`Application is running on: ${await app.getUrl()}`);

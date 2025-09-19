@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenStrategy } from '@/modules/auth/strategy/access-token.strategy';
-import { ApiKeyStrategy } from '@/modules/auth/strategy/apikey.strategy';
 import { AuthController } from '@/modules/auth/controllers/auth.controller';
 import { AuthService } from '@/modules/auth/auth.service';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
@@ -25,7 +24,6 @@ import { PhoneLocalStrategy } from './strategy/phone-local.strategy';
   controllers: [AuthController],
   providers: [
     AuthService,
-    ApiKeyStrategy,
     LocalStrategy,
     PhoneLocalStrategy,
     AccessTokenStrategy,
