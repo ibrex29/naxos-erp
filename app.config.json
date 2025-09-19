@@ -1,0 +1,10 @@
+{
+  "apps": [
+    {
+      "name": "startups-api",
+      "script": "node",
+      "interpreter": "none",
+      "args": "dist/main.js"
+    }
+  ]
+}
