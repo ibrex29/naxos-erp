@@ -17,36 +17,208 @@ datasource db {
 
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  password  String
-  role      String    @default("user")
-  isActive  Boolean   @default(true)
-  isVerified Boolean  @default(false)
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  role          String    @default("user") 
+  isActive      Boolean   @default(true)
+  isVerified    Boolean   @default(false)
   createdByUserId String?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  
-  profile           Profile?           @relation("UserProfile")
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
 
+  profile       Profile?  @relation("UserProfile")
+
+  salesOrders   SalesOrder[]
+  shipments     Shipment[]        @relation("ShipmentCreatedBy")
+  createdDistributor Distributor[] @relation("DistributorCreatedBy")
+  updatedDistributor Distributor[] @relation("DistributorUpdatedBy")
+  
   @@index([isActive])
   @@map("user")
 
 }
+
 model Profile {
-  id          String    @id @default(uuid())
-  user        User      @relation("UserProfile", fields: [userId], references: [id])
-  userId      String    @unique
+  id          String   @id @default(uuid())
+  user        User     @relation("UserProfile", fields: [userId], references: [id])
+  userId      String   @unique
 
   firstName   String
   lastName    String
   otherNames  String?
   gender      String?
   dateOfBirth DateTime?
-  phone   String?
-  
+  phone       String?
+}
+
+// --- ERP MODELS ---
+
+model Distributor {
+  id          String   @id @default(uuid())
+  name        String
+  type        DistributorType
+  email       String?   @unique
+  phone       String?
+  address     String?
+
+  creditLimit Float?    @default(0)
+  currency    Currency  @default(NGN)
+
+  salesOrders SalesOrder[]
+  payments    Payment[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdBy   User?    @relation("DistributorCreatedBy", fields: [createdById], references: [id])
+  createdById String?
+
+  updatedBy   User?    @relation("DistributorUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  sku       String   @unique
+  unit      String?
+  category  String?
+
+  batches   Batch[]
+}
+
+model Batch {
+  id          String   @id @default(uuid())
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  batchNo     String
+  expiryDate  DateTime
+  qtyAvailable Int
+
+  stockMovements StockMovement[]
+  salesItems     SalesItem[]
+
+  Shipment Shipment[]
+}
+
+model Shipment {
+  id          String   @id @default(uuid())
+  invoiceNo   String
+  supplier    String
+  currency    Currency @default(USD)
+
+  payments    Payment[]
+  documents   Document[]
+  batches     Batch[]    
+
+  createdBy   User       @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
+  createdById String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Document {
+  id          String   @id @default(uuid())
+  fileUrl     String
+  type        String
+  shipment    Shipment @relation(fields: [shipmentId], references: [id])
+  shipmentId  String
+}
+
+model SalesOrder {
+  id           String      @id @default(uuid())
+  distributor  Distributor @relation(fields: [distributorId], references: [id])
+  distributorId String
+
+  salesRep     User        @relation(fields: [salesRepId], references: [id])
+  salesRepId   String
+
+  currency     Currency    @default(NGN)
+  paymentStatus PaymentStatus @default(PENDING)
+
+  items        SalesItem[]
+  payments     Payment[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SalesItem {
+  id          String     @id @default(uuid())
+  salesOrder  SalesOrder @relation(fields: [salesOrderId], references: [id])
+  salesOrderId String
+
+  batch       Batch      @relation(fields: [batchId], references: [id])
+  batchId     String
+
+  qty         Int
+  price       Float
+}
+
+model Payment {
+  id          String   @id @default(uuid())
+  amount      Float
+  currency    Currency
+  type        PaymentType 
+  entityType  String    
+  entityId    String
+
+  distributor Distributor? @relation(fields: [distributorId], references: [id])
+  distributorId String?
+
+  shipment    Shipment? @relation(fields: [shipmentId], references: [id])
+  shipmentId  String?
+
+  salesOrder  SalesOrder? @relation(fields: [salesOrderId], references: [id])
+  salesOrderId String?
+
+  createdAt   DateTime @default(now())
+}
+
+model StockMovement {
+  id          String   @id @default(uuid())
+  batch       Batch    @relation(fields: [batchId], references: [id])
+  batchId     String
+  movementType StockMovementType
+  qty         Int
+  referenceId String?
+
+  createdAt   DateTime @default(now())
+}
+
+// --- ENUMS ---
+enum DistributorType {
+  WHOLESALER
+  HOSPITAL
+  PHARMACY
+  CLINIC
+  NGO
+  CHEMIST
+}
+
+enum Currency {
+  NGN
+  USD
+}
+
+enum PaymentType {
+  CASH
+  CREDIT
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+enum StockMovementType {
+  IN
+  OUT
 }
 
 model PasswordResetToken {
