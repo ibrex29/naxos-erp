@@ -165,6 +165,23 @@ export class UserService {
   return result;
 }
 
+async getUserById(id: string) {
+  const user = await this.prisma.user.findUnique({
+    where: { id },
+    include: {
+      profile: true,
+    },
+  });
+
+  if (!user) {
+    throw new NotFoundException(`User with id ${id} not found`);
+  }
+
+  delete user.password;
+  return user;
+}
+
+
 async getStaffSummary() {
   const result = await this.prisma.user.groupBy({
     by: ["role"],
