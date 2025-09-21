@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
-import { ApiProperty } from "@nestjs/swagger";
+import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { UserType } from "../types";
 
 export class CreateUserDto {
@@ -38,3 +38,6 @@ export class CreateUserDto {
   role?: UserType;
 
 }
+
+
+export class UpdateUserDto extends PartialType(CreateUserDto) {}
