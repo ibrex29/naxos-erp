@@ -6,7 +6,7 @@ import {
   IsNumber, 
   Min 
 } from 'class-validator';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { DistributorType, Currency } from '@prisma/client';
 
 export class CreateDistributorDto {
@@ -67,3 +67,5 @@ export class CreateDistributorDto {
   @IsEnum(Currency)
   currency?: Currency;
 }
+
+export class UpdateDistributorDto extends PartialType(CreateDistributorDto) {}

@@ -1,8 +1,10 @@
-// distributor.service.ts
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateDistributorDto } from "./dto/create-distributor.dto";
-import { UpdateDistributorDto } from "./dto/update-distributor.dto";
+import {
+  CreateDistributorDto,
+  UpdateDistributorDto,
+} from "./dto/create-distributor.dto";
+import { FetchDistributorDTO } from "./dto/fetch-distributors.dto";
 
 @Injectable()
 export class DistributorService {
@@ -18,17 +20,130 @@ export class DistributorService {
     });
   }
 
-  async findAll() {
-    return this.prisma.distributor.findMany();
+  async getPaginatedDistributors(query: FetchDistributorDTO) {
+    const { search, sortField, sortOrder, type } = query;
+
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { email: { contains: search, mode: "insensitive" } },
+        { phone: { contains: search, mode: "insensitive" } },
+        { address: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
+    if (type) {
+      where.type = type;
+    }
+
+    const orderBy = sortField
+      ? { [sortField]: sortOrder || "desc" }
+      : { createdAt: "desc" };
+
+    const result = await this.prisma.paginate("Distributor", {
+      where,
+      query,
+      orderBy,
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { firstName: true, lastName: true } },
+          },
+        },
+        salesOrders: {
+          include: {
+            items: { select: { qty: true, price: true } },
+          },
+        },
+        payments: {
+          select: { id: true, amount: true, createdAt: true },
+        },
+      },
+    });
+
+    const dataWithComputed = result.data.map((d: any) => {
+      const salesOrdersWithTotal = d.salesOrders.map((so: any) => ({
+        ...so,
+        totalAmount: so.items.reduce(
+          (sum: number, item: any) => sum + item.qty * item.price,
+          0
+        ),
+      }));
+
+      const totalPurchases = salesOrdersWithTotal.reduce(
+        (sum: number, so: any) => sum + so.totalAmount,
+        0
+      );
+
+      const lastOrder = salesOrdersWithTotal.sort(
+        (a: any, b: any) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )[0]?.createdAt;
+
+      return {
+        ...d,
+        salesOrders: salesOrdersWithTotal,
+        totalPurchases,
+        lastOrder,
+      };
+    });
+
+    return { ...result, data: dataWithComputed };
   }
 
-  async findOne(id: string) {
+  async getDistributorById(id: string) {
     const distributor = await this.prisma.distributor.findUnique({
       where: { id },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { firstName: true, lastName: true } },
+          },
+        },
+        salesOrders: {
+          include: {
+            items: { select: { qty: true, price: true } },
+          },
+        },
+        payments: {
+          select: { id: true, amount: true, createdAt: true },
+        },
+      },
     });
-    if (!distributor)
-      throw new NotFoundException(`Distributor ${id} not found`);
-    return distributor;
+
+    if (!distributor) {
+      throw new NotFoundException(`Distributor with id ${id} not found`);
+    }
+
+    const salesOrdersWithTotal = distributor.salesOrders.map((so: any) => ({
+      ...so,
+      totalAmount: so.items.reduce(
+        (sum: number, item: any) => sum + item.qty * item.price,
+        0
+      ),
+    }));
+
+    const totalPurchases = salesOrdersWithTotal.reduce(
+      (sum: number, so: any) => sum + so.totalAmount,
+      0
+    );
+
+    const lastOrder = salesOrdersWithTotal.sort(
+      (a: any, b: any) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )[0]?.createdAt;
+
+    return {
+      ...distributor,
+      salesOrders: salesOrdersWithTotal,
+      totalPurchases,
+      lastOrder,
+    };
   }
 
   async update(id: string, dto: UpdateDistributorDto, userId: string) {
@@ -39,6 +154,59 @@ export class DistributorService {
         updatedById: userId,
       },
     });
+  }
+
+  async getDistributorAnalytics() {
+    const distributors = await this.prisma.distributor.findMany({
+      select: { id: true, type: true, isActive: true },
+    });
+
+    const salesOrders = await this.prisma.salesOrder.findMany({
+      include: {
+        distributor: { select: { id: true, type: true } },
+        items: { select: { qty: true, price: true } },
+      },
+    });
+
+    const totalDistributors = distributors.length;
+    const activeDistributors = distributors.filter(
+      (d) => d.isActive === true
+    ).length;
+
+    const byType: Record<
+      string,
+      { total: number; active: number; sales: number }
+    > = {};
+
+    for (const d of distributors) {
+      if (!byType[d.type]) {
+        byType[d.type] = { total: 0, active: 0, sales: 0 };
+      }
+      byType[d.type].total += 1;
+      if (d.isActive === true) byType[d.type].active += 1;
+    }
+
+    for (const so of salesOrders) {
+      const orderTotal = so.items.reduce(
+        (sum, item) => sum + item.qty * item.price,
+        0
+      );
+      if (so.distributor?.type) {
+        byType[so.distributor.type].sales += orderTotal;
+      }
+    }
+
+    const totalSales = Object.values(byType).reduce(
+      (sum, t) => sum + t.sales,
+      0
+    );
+
+    return {
+      totalDistributors,
+      activeDistributors,
+      totalSales,
+      byType,
+    };
   }
 
   async remove(id: string) {

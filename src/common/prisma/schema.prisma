@@ -35,7 +35,7 @@ model User {
   shipments     Shipment[]        @relation("ShipmentCreatedBy")
   createdDistributor Distributor[] @relation("DistributorCreatedBy")
   updatedDistributor Distributor[] @relation("DistributorUpdatedBy")
-  
+
   @@index([isActive])
   @@map("user")
 
@@ -63,6 +63,7 @@ model Distributor {
   email       String?   @unique
   phone       String?
   address     String?
+  isActive    Boolean   @default(true)
 
   creditLimit Float?    @default(0)
   currency    Currency  @default(NGN)
