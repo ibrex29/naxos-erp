@@ -3,6 +3,7 @@ import {
   Controller,
   Get,
   Param,
+  Patch,
   Post,
   Put,
   Query,
@@ -83,5 +84,15 @@ export class UserController {
   @Put(":id")
   async updateUser(@Param("id") userId: string, @Body() dto: UpdateUserDto) {
     return this.userService.updateUser(userId, dto);
+  }
+
+  @Patch(":id/activate")
+  async activateUser(@Param("id") userId: string) {
+    return this.userService.activateUser(userId);
+  }
+
+  @Patch(":id/deactivate")
+  async deactivateUser(@Param("id") userId: string) {
+    return this.userService.deactivateUser(userId);
   }
 }
