@@ -55,7 +55,7 @@ export class DistributorService {
         },
         salesOrders: {
           include: {
-            items: { select: { qty: true, price: true } },
+            items: { select: { quantity: true, unitPrice: true } },
           },
         },
         payments: {
@@ -65,29 +65,34 @@ export class DistributorService {
     });
 
     const dataWithComputed = result.data.map((d: any) => {
-      const salesOrdersWithTotal = d.salesOrders.map((so: any) => ({
-        ...so,
-        totalAmount: so.items.reduce(
-          (sum: number, item: any) => sum + item.qty * item.price,
-          0
-        ),
-      }));
-
-      const totalPurchases = salesOrdersWithTotal.reduce(
-        (sum: number, so: any) => sum + so.totalAmount,
+      const totalPurchases = d.salesOrders.reduce(
+        (sum: number, so: any) =>
+          sum +
+          so.items.reduce(
+            (s: number, item: any) => s + item.quantity * item.unitPrice,
+            0
+          ),
         0
       );
 
-      const lastOrder = salesOrdersWithTotal.sort(
+      const sortedOrders = [...d.salesOrders].sort(
         (a: any, b: any) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )[0]?.createdAt;
+      );
+      const latestOrder = sortedOrders[0] || null;
+
+      const latestOrderTotal = latestOrder
+        ? latestOrder.items.reduce(
+            (sum: number, item: any) => sum + item.quantity * item.unitPrice,
+            0
+          )
+        : 0;
 
       return {
         ...d,
-        salesOrders: salesOrdersWithTotal,
         totalPurchases,
-        lastOrder,
+        lastOrder: latestOrder?.createdAt || null,
+        latestOrderTotal,
       };
     });
 
@@ -107,7 +112,7 @@ export class DistributorService {
         },
         salesOrders: {
           include: {
-            items: { select: { qty: true, price: true } },
+            items: { select: { quantity: true, unitPrice: true } },
           },
         },
         payments: {
@@ -120,21 +125,21 @@ export class DistributorService {
       throw new NotFoundException(`Distributor with id ${id} not found`);
     }
 
-    const salesOrdersWithTotal = distributor.salesOrders.map((so: any) => ({
+    const salesOrdersWithTotal = distributor.salesOrders.map((so) => ({
       ...so,
       totalAmount: so.items.reduce(
-        (sum: number, item: any) => sum + item.qty * item.price,
+        (sum, item) => sum + item.quantity * item.unitPrice,
         0
       ),
     }));
 
     const totalPurchases = salesOrdersWithTotal.reduce(
-      (sum: number, so: any) => sum + so.totalAmount,
+      (sum, so) => sum + so.totalAmount,
       0
     );
 
     const lastOrder = salesOrdersWithTotal.sort(
-      (a: any, b: any) =>
+      (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )[0]?.createdAt;
 
@@ -164,14 +169,12 @@ export class DistributorService {
     const salesOrders = await this.prisma.salesOrder.findMany({
       include: {
         distributor: { select: { id: true, type: true } },
-        items: { select: { qty: true, price: true } },
+        items: { select: { quantity: true, unitPrice: true } },
       },
     });
 
     const totalDistributors = distributors.length;
-    const activeDistributors = distributors.filter(
-      (d) => d.isActive === true
-    ).length;
+    const activeDistributors = distributors.filter((d) => d.isActive).length;
 
     const byType: Record<
       string,
@@ -183,12 +186,12 @@ export class DistributorService {
         byType[d.type] = { total: 0, active: 0, sales: 0 };
       }
       byType[d.type].total += 1;
-      if (d.isActive === true) byType[d.type].active += 1;
+      if (d.isActive) byType[d.type].active += 1;
     }
 
     for (const so of salesOrders) {
       const orderTotal = so.items.reduce(
-        (sum, item) => sum + item.qty * item.price,
+        (sum, item) => sum + item.quantity * item.unitPrice,
         0
       );
       if (so.distributor?.type) {

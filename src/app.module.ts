@@ -14,6 +14,8 @@ import { HttpModule } from "@nestjs/axios";
 import { UserModule } from "./modules/user/user.module";
 import { UploadModule } from "./common/upload/upload.module";
 import { DistributorModule } from "./modules/distributor/distributor.module";
+import { ShipmentModule } from "./modules/shipment/shipment.module";
+import { SalesOrderModule } from "./modules/sales/sales-order.module";
 
 @Module({
   imports: [
@@ -48,7 +50,9 @@ import { DistributorModule } from "./modules/distributor/distributor.module";
     UserModule,
     AuthModule,
     UploadModule,
-    DistributorModule
+    DistributorModule,
+    ShipmentModule,
+    SalesOrderModule
   ],
 })
 export class AppModule {}

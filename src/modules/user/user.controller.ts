@@ -48,13 +48,23 @@ export class UserController {
   }
 
   @ApiOperation({
+    summary: "Get staff summary",
+    description:
+      "Returns the total number of staff, broken down by role (administrators, sales, warehouse, finance).",
+  })
+  @Get("staff-summary")
+  async getStaffSummary() {
+    return this.userService.getStaffSummary();
+  }
+
+  @ApiOperation({
     summary: "Get a user by ID",
     description:
       "Fetch a single user by their unique ID, including profile details.",
   })
   @ApiParam({
     name: "id",
-    description: "User ID (UUID)"
+    description: "User ID (UUID)",
   })
   @Get(":id")
   async getUserById(@Param("id") id: string) {
@@ -68,20 +78,10 @@ export class UserController {
   })
   @ApiParam({
     name: "id",
-    description: "User ID (UUID) of the user to update"
+    description: "User ID (UUID) of the user to update",
   })
   @Put(":id")
   async updateUser(@Param("id") userId: string, @Body() dto: UpdateUserDto) {
     return this.userService.updateUser(userId, dto);
-  }
-
-  @ApiOperation({
-    summary: "Get staff summary",
-    description:
-      "Returns the total number of staff, broken down by role (administrators, sales, warehouse, finance).",
-  })
-  @Get("staff-summary")
-  async getStaffSummary() {
-    return this.userService.getStaffSummary();
   }
 }

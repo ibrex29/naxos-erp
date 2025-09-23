@@ -8,13 +8,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// generator erd {
-//   provider = "prisma-erd-generator"
-//   output   = "./ERD.svg"
-//   format   = "svg"
-// }
-
-
+// -------------------- USER & PROFILE --------------------
 
 model User {
   id            String    @id @default(uuid())
@@ -38,7 +32,6 @@ model User {
 
   @@index([isActive])
   @@map("user")
-
 }
 
 model Profile {
@@ -54,7 +47,7 @@ model Profile {
   phone       String?
 }
 
-// --- ERP MODELS ---
+// -------------------- DISTRIBUTOR --------------------
 
 model Distributor {
   id          String   @id @default(uuid())
@@ -81,83 +74,84 @@ model Distributor {
   updatedById String?
 }
 
-model Product {
-  id        String   @id @default(uuid())
-  name      String
-  sku       String   @unique
-  unit      String?
-  category  String?
+// -------------------- MEDICINE & SHIPMENT --------------------
 
-  batches   Batch[]
-}
+model Medicine {
+  id          String         @id @default(uuid())
+  name        String
+  strength    String?        
+  form        String?       
+  manufacturer String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 
-model Batch {
-  id          String   @id @default(uuid())
-  product     Product  @relation(fields: [productId], references: [id])
-  productId   String
-  batchNo     String
-  expiryDate  DateTime
-  qtyAvailable Int
+  shipmentItems ShipmentItem[]
 
-  stockMovements StockMovement[]
-  salesItems     SalesItem[]
-
-  Shipment Shipment[]
+  SalesItem SalesItem[]
 }
 
 model Shipment {
-  id          String   @id @default(uuid())
-  invoiceNo   String
-  supplier    String
-  currency    Currency @default(USD)
+  id                 String        @id @default(uuid())
+  status             StockMovementType @default(IN)
+  deliveryStatus   String        @default("pending")
+  proformaInvoiceNo  String
+  billOfLading       String
+  supplier           String
+  receivedDate       DateTime?
+  documents          Json?        
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  payments    Payment[]
-  documents   Document[]
-  batches     Batch[]    
+  items              ShipmentItem[]
 
-  createdBy   User       @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
-  createdById String
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdBy   User?  @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
+  createdById String?
 }
 
-model Document {
-  id          String   @id @default(uuid())
-  fileUrl     String
-  type        String
-  shipment    Shipment @relation(fields: [shipmentId], references: [id])
-  shipmentId  String
+model ShipmentItem {
+  id           String    @id @default(uuid())
+  shipmentId   String
+  medicineId   String
+  batchNumber  String
+  expiryDate   DateTime
+  quantity     Int
+  unitCost     Float
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  shipment     Shipment   @relation(fields: [shipmentId], references: [id])
+  medicine     Medicine   @relation(fields: [medicineId], references: [id])
 }
+
+// -------------------- SALES --------------------
 
 model SalesOrder {
-  id           String      @id @default(uuid())
-  distributor  Distributor @relation(fields: [distributorId], references: [id])
+  id            String      @id @default(uuid())
+  distributor   Distributor @relation(fields: [distributorId], references: [id])
   distributorId String
 
-  salesRep     User        @relation(fields: [salesRepId], references: [id])
-  salesRepId   String
+  salesRep      User        @relation(fields: [salesRepId], references: [id])
+  salesRepId    String
 
-  currency     Currency    @default(NGN)
+  currency      Currency    @default(NGN)
   paymentStatus PaymentStatus @default(PENDING)
 
-  items        SalesItem[]
-  payments     Payment[]
+  items         SalesItem[]
+  payments      Payment[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model SalesItem {
-  id          String     @id @default(uuid())
-  salesOrder  SalesOrder @relation(fields: [salesOrderId], references: [id])
-  salesOrderId String
+  id            String      @id @default(uuid())
+  salesOrderId  String
+  medicineId    String
+  quantity      Int
+  unitPrice     Float
 
-  batch       Batch      @relation(fields: [batchId], references: [id])
-  batchId     String
-
-  qty         Int
-  price       Float
+  salesOrder    SalesOrder  @relation(fields: [salesOrderId], references: [id])
+  medicine      Medicine    @relation(fields: [medicineId], references: [id])
 }
 
 model Payment {
@@ -171,27 +165,12 @@ model Payment {
   distributor Distributor? @relation(fields: [distributorId], references: [id])
   distributorId String?
 
-  shipment    Shipment? @relation(fields: [shipmentId], references: [id])
-  shipmentId  String?
-
   salesOrder  SalesOrder? @relation(fields: [salesOrderId], references: [id])
   salesOrderId String?
 
   createdAt   DateTime @default(now())
 }
 
-model StockMovement {
-  id          String   @id @default(uuid())
-  batch       Batch    @relation(fields: [batchId], references: [id])
-  batchId     String
-  movementType StockMovementType
-  qty         Int
-  referenceId String?
-
-  createdAt   DateTime @default(now())
-}
-
-// --- ENUMS ---
 enum DistributorType {
   WHOLESALER
   HOSPITAL
@@ -221,6 +200,8 @@ enum StockMovementType {
   IN
   OUT
 }
+
+// -------------------- TOKENS --------------------
 
 model PasswordResetToken {
   email     String
