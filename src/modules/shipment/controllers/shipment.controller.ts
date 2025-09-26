@@ -9,16 +9,16 @@ import {
 } from "@nestjs/common";
 import { ShipmentService } from "../services/shipment.service";
 import { User } from "@/common/decorators/param-decorator/User.decorator";
-import { CreateShipmentDto } from "../dto/create-shipment.dto";
+import { CreateShipmentDto } from "../dto/shipment/create-shipment.dto";
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
 } from "@nestjs/swagger";
-import { FetchShipmentDTO } from "../dto/fetch-shipment.dto";
+import { FetchShipmentDTO } from "../dto/shipment/fetch-shipment.dto";
 import { Public } from "@/common/constants/routes.constant";
-import { UpdateDeliveryStatusDTO } from "../dto/update-delivery.dto";
+import { UpdateDeliveryStatusDTO } from "../dto/shipment/update-delivery.dto";
 
 @ApiTags("Shipments")
 @ApiBearerAuth()

@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { CreateShipmentDto } from "../dto/create-shipment.dto";
-import { UpdateShipmentDto } from "../dto/update-shipment.dto";
-import { FetchShipmentDTO } from "../dto/fetch-shipment.dto";
+import { CreateShipmentDto } from "../dto/shipment/create-shipment.dto";
+import { UpdateShipmentDto } from "../dto/shipment/update-shipment.dto";
+import { FetchShipmentDTO } from "../dto/shipment/fetch-shipment.dto";
 import { Prisma } from "@prisma/client";
-import { UpdateDeliveryStatusDTO } from "../dto/update-delivery.dto";
+import { UpdateDeliveryStatusDTO } from "../dto/shipment/update-delivery.dto";
 
 @Injectable()
 export class ShipmentService {
@@ -28,6 +28,10 @@ export class ShipmentService {
             medicine: {
               create: {
                 name: item.medicine.name,
+                form: item.medicine.form,
+                manufacturer: item.medicine.manufacturer,
+                strength: item.medicine.strength
+                
               },
             },
           })),

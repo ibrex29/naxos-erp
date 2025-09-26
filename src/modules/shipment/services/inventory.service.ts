@@ -83,37 +83,79 @@ export class InventoryService {
     });
   }
 
-  async getPaginatedMedicines(query: FetchMedicineDTO) {
-    const { search, sortField, sortOrder } = query;
+async getPaginatedMedicines(query: FetchMedicineDTO) {
+  const { search, sortField, sortOrder } = query;
 
-    const where: any = {};
-    if (search) {
-      where.OR = [
-        { name: { contains: search, mode: "insensitive" } },
-        { strength: { contains: search, mode: "insensitive" } },
-        { form: { contains: search, mode: "insensitive" } },
-        { manufacturer: { contains: search, mode: "insensitive" } },
-      ];
-    }
-
-    const orderBy = sortField
-      ? { [sortField]: sortOrder || "desc" }
-      : { createdAt: "desc" };
-
-    return this.prisma.paginate("Medicine", {
-      where,
-      query,
-      orderBy,
-      include: {
+  const where: any = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" } },
+      { strength: { contains: search, mode: "insensitive" } },
+      { form: { contains: search, mode: "insensitive" } },
+      { manufacturer: { contains: search, mode: "insensitive" } },
+      {
         shipmentItems: {
-          select: {
-            batchNumber: true,
-            expiryDate: true,
-            quantity: true,
-            unitCost: true,
-          },
+          some: { batchNumber: { contains: search, mode: "insensitive" } },
         },
       },
-    });
+    ];
   }
+
+  if (query.form) {
+    where.form = { equals: query.form, mode: "insensitive" };
+  }
+
+  if (query.expiryBefore) {
+    where.shipmentItems = {
+      some: {
+        expiryDate: { lte: new Date(query.expiryBefore) },
+      },
+    };
+  }
+
+  if (query.expiryAfter) {
+    where.shipmentItems = {
+      some: {
+        expiryDate: { gte: new Date(query.expiryAfter) },
+      },
+    };
+  }
+
+  if (query.inStockOnly) {
+    where.shipmentItems = {
+      some: {
+        quantity: { gt: 0 },
+      },
+    };
+  }
+
+  if (query.createdAfter) {
+    where.createdAt = { gte: new Date(query.createdAfter) };
+  }
+
+  if (query.createdBefore) {
+    where.createdAt = { lte: new Date(query.createdBefore) };
+  }
+
+  const orderBy = sortField
+    ? { [sortField]: sortOrder || "desc" }
+    : { createdAt: "desc" };
+
+  return this.prisma.paginate("Medicine", {
+    where,
+    query,
+    orderBy,
+    include: {
+      shipmentItems: {
+        select: {
+          batchNumber: true,
+          expiryDate: true,
+          quantity: true,
+          unitCost: true,
+        },
+      },
+    },
+  });
+}
+
 }

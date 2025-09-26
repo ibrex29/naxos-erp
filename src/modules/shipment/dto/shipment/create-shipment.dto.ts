@@ -5,14 +5,35 @@ import {
   IsArray,
   ValidateNested,
   IsNumber,
+  IsEnum,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
+import { MedicineFormEnum } from "../../enum/shipment.enu";
 
-class MedicineDto {
+export class MedicineDto {
   @ApiProperty({ example: "Paracetamol", description: "Medicine name" })
   @IsString()
   name: string;
+
+  @ApiProperty({
+    enum: MedicineFormEnum,
+    example: MedicineFormEnum.TABLET,
+    description: "Dosage form of the medicine",
+  })
+  @IsEnum(MedicineFormEnum)
+  @IsOptional()
+  form: MedicineFormEnum;
+
+  @ApiProperty({ example: "Pfizer", description: "Manufacturer of the medicine" })
+  @IsString()
+  @IsOptional()
+  manufacturer: string;
+
+  @ApiProperty({ example: "500mg", description: "Strength of the medicine" })
+  @IsOptional()
+  @IsString()
+  strength?: string;
 
   @ApiProperty({ example: "BN-2025-001", description: "Batch number" })
   @IsString()
