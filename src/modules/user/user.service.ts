@@ -13,7 +13,6 @@ import { UserType } from "./types";
 
 @Injectable()
 export class UserService {
-
   constructor(private prisma: PrismaService) {}
 
   async createUser(dto: CreateUserDto) {
@@ -40,12 +39,14 @@ export class UserService {
     }
 
     const { firstName, lastName, middleName } = extractNames(dto.fullname);
+    const code = await this.generateUserCode(dto.role);
 
     const createdUser = await this.prisma.user.create({
       data: {
         email: dto.email,
         password: dto.password,
         role: dto.role,
+        code,
         isActive: true,
         profile: {
           create: {
@@ -62,168 +63,162 @@ export class UserService {
     return createdUser;
   }
 
-
-
   async updateUser(userId: string, dto: UpdateUserDto) {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-    include: { profile: true },
-  });
-
-  if (!user) {
-    throw new NotFoundException(`User with ID: ${userId} not found`);
-  }
-
-  if (dto.email && dto.email !== user.email) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: dto.email },
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: { profile: true },
     });
-    if (existingUser) {
-      throw new ConflictException(
-        `User with email: ${dto.email} already exists.`
-      );
+
+    if (!user) {
+      throw new NotFoundException(`User with ID: ${userId} not found`);
     }
-  }
 
-  if (dto.phoneNumber && dto.phoneNumber !== user.profile?.phone) {
-    const existingProfile = await this.prisma.profile.findFirst({
-      where: { phone: dto.phoneNumber },
-    });
-    if (existingProfile) {
-      throw new ConflictException(
-        `User with phone number: ${dto.phoneNumber} already exists.`
-      );
+    if (dto.email && dto.email !== user.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+      if (existingUser) {
+        throw new ConflictException(
+          `User with email: ${dto.email} already exists.`
+        );
+      }
     }
-  }
 
-  let firstName = user.profile?.firstName;
-  let lastName = user.profile?.lastName;
-  let middleName = user.profile?.otherNames;
+    if (dto.phoneNumber && dto.phoneNumber !== user.profile?.phone) {
+      const existingProfile = await this.prisma.profile.findFirst({
+        where: { phone: dto.phoneNumber },
+      });
+      if (existingProfile) {
+        throw new ConflictException(
+          `User with phone number: ${dto.phoneNumber} already exists.`
+        );
+      }
+    }
 
-  if (dto.fullname) {
-    const names = extractNames(dto.fullname);
-    firstName = names.firstName;
-    lastName = names.lastName;
-    middleName = names.middleName;
-  }
+    let firstName = user.profile?.firstName;
+    let lastName = user.profile?.lastName;
+    let middleName = user.profile?.otherNames;
 
-  const updatedUser = await this.prisma.user.update({
-    where: { id: userId },
-    data: {
-      email: dto.email ?? user.email,
-      role: dto.role ?? user.role,
-      profile: {
-        update: {
-          firstName,
-          lastName,
-          otherNames: middleName,
-          phone: dto.phoneNumber ?? user.profile?.phone,
+    if (dto.fullname) {
+      const names = extractNames(dto.fullname);
+      firstName = names.firstName;
+      lastName = names.lastName;
+      middleName = names.middleName;
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: dto.email ?? user.email,
+        role: dto.role ?? user.role,
+        profile: {
+          update: {
+            firstName,
+            lastName,
+            otherNames: middleName,
+            phone: dto.phoneNumber ?? user.profile?.phone,
+          },
         },
       },
-    },
-    include: { profile: true },
-  });
+      include: { profile: true },
+    });
 
-  delete updatedUser.password;
-  return updatedUser;
-}
-
+    delete updatedUser.password;
+    return updatedUser;
+  }
 
   async getPaginatedUsers(query: FetchUserDTO) {
-  const { search, sortField, sortOrder, isActive, role } = query;
+    const { search, sortField, sortOrder, isActive, role } = query;
 
-  const where: any = {};
+    const where: any = {};
 
-  if (search) {
-    where.OR = [
-      { profile: { firstName: { contains: search, mode: 'insensitive' } } },
-      { profile: { lastName: { contains: search, mode: 'insensitive' } } },
-      { email: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  if (typeof isActive === 'boolean') {
-    where.isActive = isActive;
-  }
-
-  if (role) {
-    where.role = role;
-  }
-
-  const orderBy =
-    ['firstName', 'lastName'].includes(sortField || '')
-      ? { profile: { [sortField!]: sortOrder || 'asc' } }
-      : { [sortField || 'createdAt']: sortOrder || 'desc' };
-
-  const result = await this.prisma.paginate('User', {
-    where,
-    query,
-    orderBy,
-    include: {
-      profile: true,
-    },
-  });
-
-  return result;
-}
-
-async getUserById(id: string) {
-  const user = await this.prisma.user.findUnique({
-    where: { id },
-    include: {
-      profile: true,
-    },
-  });
-
-  if (!user) {
-    throw new NotFoundException(`User with id ${id} not found`);
-  }
-
-  delete user.password;
-  return user;
-}
-
-
-async getStaffSummary() {
-  const result = await this.prisma.user.groupBy({
-    by: ["role"],
-    _count: { role: true },
-  });
-
-  let administrators = 0;
-  let salesStaff = 0;
-  let warehouseStaff = 0;
-  let financeStaff = 0;
-
-  // Map counts from DB result
-  result.forEach((r) => {
-    switch (r.role) {
-      case UserType.SUPER_ADMIN:
-        administrators = r._count.role;
-        break;
-      case UserType.SALES_ADMIN:
-        salesStaff = r._count.role;
-        break;
-      case UserType.WAREHOUSE_ADMIN:
-        warehouseStaff = r._count.role;
-        break;
-      case UserType.FINANCE_ADMIN:
-        financeStaff = r._count.role;
-        break;
+    if (search) {
+      where.OR = [
+        { profile: { firstName: { contains: search, mode: "insensitive" } } },
+        { profile: { lastName: { contains: search, mode: "insensitive" } } },
+        { email: { contains: search, mode: "insensitive" } },
+      ];
     }
-  });
 
-  const total = administrators + salesStaff + warehouseStaff + financeStaff;
+    if (typeof isActive === "boolean") {
+      where.isActive = isActive;
+    }
 
-  return {
-    total,
-    administrators,
-    salesStaff,
-    warehouseStaff,
-    financeStaff,
-  };
-}
+    if (role) {
+      where.role = role;
+    }
 
+    const orderBy = ["firstName", "lastName"].includes(sortField || "")
+      ? { profile: { [sortField!]: sortOrder || "asc" } }
+      : { [sortField || "createdAt"]: sortOrder || "desc" };
+
+    const result = await this.prisma.paginate("User", {
+      where,
+      query,
+      orderBy,
+      include: {
+        profile: true,
+      },
+    });
+
+    return result;
+  }
+
+  async getUserById(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        profile: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    delete user.password;
+    return user;
+  }
+
+  async getStaffSummary() {
+    const result = await this.prisma.user.groupBy({
+      by: ["role"],
+      _count: { role: true },
+    });
+
+    let administrators = 0;
+    let salesStaff = 0;
+    let warehouseStaff = 0;
+    let financeStaff = 0;
+
+    // Map counts from DB result
+    result.forEach((r) => {
+      switch (r.role) {
+        case UserType.SUPER_ADMIN:
+          administrators = r._count.role;
+          break;
+        case UserType.SALES_ADMIN:
+          salesStaff = r._count.role;
+          break;
+        case UserType.WAREHOUSE_ADMIN:
+          warehouseStaff = r._count.role;
+          break;
+        case UserType.FINANCE_ADMIN:
+          financeStaff = r._count.role;
+          break;
+      }
+    });
+
+    const total = administrators + salesStaff + warehouseStaff + financeStaff;
+
+    return {
+      total,
+      administrators,
+      salesStaff,
+      warehouseStaff,
+      financeStaff,
+    };
+  }
 
   async findUserByEmail(email: string) {
     return this.prisma.user.findFirst({
@@ -325,6 +320,46 @@ async getStaffSummary() {
     });
   }
 
+  /**
+   * Generate sequential user code per role.
+   */
+  private async generateUserCode(role: string): Promise<string> {
+    let prefix = "USR";
 
+    switch (role) {
+      case UserType.SUPER_ADMIN:
+        prefix = "SUP";
+        break;
+      case UserType.SALES_ADMIN:
+        prefix = "SAL";
+        break;
+      case UserType.WAREHOUSE_ADMIN:
+        prefix = "WH";
+        break;
+      case UserType.FINANCE_ADMIN:
+        prefix = "FIN";
+        break;
+    }
 
+    // find the last user with this role
+    const lastUser = await this.prisma.user.findFirst({
+      where: { role },
+      orderBy: { createdAt: "desc" },
+      select: { code: true },
+    });
+
+    let nextNumber = 1;
+
+    if (lastUser?.code) {
+      const parts = lastUser.code.split("-");
+      const lastNumber = parseInt(parts[1], 10);
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+
+    const numberPart = String(nextNumber).padStart(4, "0");
+
+    return `${prefix}-${numberPart}`;
+  }
 }

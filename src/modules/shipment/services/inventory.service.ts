@@ -7,11 +7,7 @@ import { FetchMedicineDTO } from "../dto/inventory/fetch-medicine.dto";
 export class InventoryService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Dashboard Overview
-   */
   async getOverview() {
-    // Total stock value
     const totalStockValue = await this.prisma.shipmentItem.aggregate({
       _sum: {
         unitCost: true,
@@ -31,13 +27,11 @@ export class InventoryService {
         },
       },
     });
-
-    // Active items
     const activeItems = await this.prisma.medicine.count();
 
     return {
       totalStockValue: stockValue,
-      lowStockItems: 0, 
+      lowStockItems: 0,
       expiringSoon,
       activeItems,
     };
@@ -62,9 +56,6 @@ export class InventoryService {
     }));
   }
 
-  /**
-   * Expiring batches (FEFO)
-   */
   async getExpiringBatches() {
     return this.prisma.shipmentItem.findMany({
       where: {
@@ -81,9 +72,6 @@ export class InventoryService {
     });
   }
 
-  /**
-   * FIFO / FEFO Queue
-   */
   async getFIFOQueue() {
     return this.prisma.shipmentItem.findMany({
       orderBy: {
@@ -96,37 +84,36 @@ export class InventoryService {
   }
 
   async getPaginatedMedicines(query: FetchMedicineDTO) {
-  const { search, sortField, sortOrder } = query;
+    const { search, sortField, sortOrder } = query;
 
-  const where: any = {};
-  if (search) {
-    where.OR = [
-      { name: { contains: search, mode: "insensitive" } },
-      { strength: { contains: search, mode: "insensitive" } },
-      { form: { contains: search, mode: "insensitive" } },
-      { manufacturer: { contains: search, mode: "insensitive" } },
-    ];
-  }
+    const where: any = {};
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: "insensitive" } },
+        { strength: { contains: search, mode: "insensitive" } },
+        { form: { contains: search, mode: "insensitive" } },
+        { manufacturer: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
-  const orderBy = sortField
-    ? { [sortField]: sortOrder || "desc" }
-    : { createdAt: "desc" };
+    const orderBy = sortField
+      ? { [sortField]: sortOrder || "desc" }
+      : { createdAt: "desc" };
 
-  return this.prisma.paginate("Medicine", {
-    where,
-    query,
-    orderBy,
-    include: {
-      shipmentItems: {
-        select: {
-          batchNumber: true,
-          expiryDate: true,
-          quantity: true,
-          unitCost: true,
+    return this.prisma.paginate("Medicine", {
+      where,
+      query,
+      orderBy,
+      include: {
+        shipmentItems: {
+          select: {
+            batchNumber: true,
+            expiryDate: true,
+            quantity: true,
+            unitCost: true,
+          },
         },
       },
-    },
-  });
-}
-
+    });
+  }
 }
