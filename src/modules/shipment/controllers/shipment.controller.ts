@@ -22,7 +22,7 @@ import { UpdateDeliveryStatusDTO } from "../dto/shipment/update-delivery.dto";
 
 @ApiTags("Shipments")
 @ApiBearerAuth()
-@Controller("shipments")
+@Controller({path:"shipments", version: "1"})
 export class ShipmentController {
   constructor(private readonly shipmentService: ShipmentService) {}
 

@@ -2,7 +2,7 @@ import { PrismaService } from "@/common/prisma/prisma.service";
 import { Injectable } from "@nestjs/common";
 import { subDays, addDays } from "date-fns";
 import { FetchMedicineDTO } from "../dto/inventory/fetch-medicine.dto";
-import { DeliveryStatusEnum } from "../enum/shipment.enu";
+import { DeliveryStatusEnum } from "../enum/shipment.enum";
 
 @Injectable()
 export class InventoryService {

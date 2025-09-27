@@ -28,10 +28,10 @@ model User {
   shipments          Shipment[]    @relation("ShipmentCreatedBy")
   createdDistributor Distributor[] @relation("DistributorCreatedBy")
   updatedDistributor Distributor[] @relation("DistributorUpdatedBy")
+  Document           Document[]
 
   @@index([isActive])
   @@map("user")
-  Document Document[]
 }
 
 model Profile {
@@ -74,13 +74,18 @@ model Distributor {
 }
 
 model Medicine {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   name         String
   strength     String?
   form         String?
   manufacturer String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+
+  manufacturingDate DateTime?
+  packSize          Int?
+  countryOfOrigin   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   shipmentItems ShipmentItem[]
 
@@ -94,6 +99,7 @@ model Shipment {
   proformaInvoiceNo String
   billOfLading      String
   supplier          String
+  shipmentMode      ShipmentMode?
   receivedDate      DateTime?
   documents         Json?
   createdAt         DateTime          @default(now())
@@ -172,18 +178,18 @@ model Payment {
 }
 
 model Document {
-  id          String    @id @default(uuid())
-  url         String  
-  fileName    String?
-  mimeType    String?
-  size        Int?    
-  uploadedBy  User?     @relation(fields: [uploadedById], references: [id])
+  id           String  @id @default(uuid())
+  url          String
+  fileName     String?
+  mimeType     String?
+  size         Int?
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id])
   uploadedById String?
 
-  payment     Payment?  @relation(fields: [paymentId], references: [id])
-  paymentId   String?
+  payment   Payment? @relation(fields: [paymentId], references: [id])
+  paymentId String?
 
-  createdAt   DateTime  @default(now())
+  createdAt DateTime @default(now())
 }
 
 enum DistributorType {
@@ -214,6 +220,12 @@ enum PaymentStatus {
 enum StockMovementType {
   IN
   OUT
+}
+
+enum ShipmentMode {
+  AIR
+  SEA
+  LAND
 }
 
 model PasswordResetToken {

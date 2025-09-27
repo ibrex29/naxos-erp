@@ -9,7 +9,7 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
-import { MedicineFormEnum } from "../../enum/shipment.enu";
+import { MedicineFormEnum, ShipmentMode } from "../../enum/shipment.enum";
 
 export class MedicineDto {
   @ApiProperty({ example: "Paracetamol", description: "Medicine name" })
@@ -25,7 +25,10 @@ export class MedicineDto {
   @IsOptional()
   form: MedicineFormEnum;
 
-  @ApiProperty({ example: "Pfizer", description: "Manufacturer of the medicine" })
+  @ApiProperty({
+    example: "Pfizer",
+    description: "Manufacturer of the medicine",
+  })
   @IsString()
   @IsOptional()
   manufacturer: string;
@@ -45,6 +48,27 @@ export class MedicineDto {
   })
   @IsDateString()
   expiryDate: string;
+
+  @ApiProperty({
+    example: 100,
+    description: "Pack size (e.g., number of tablets/capsules per pack)",
+  })
+  @IsNumber()
+  packSize: number;
+
+  @ApiProperty({
+    example: "India",
+    description: "Country where the medicine was manufactured",
+  })
+  @IsString()
+  countryOfManufacture: string;
+
+  @ApiProperty({
+    example: "2024-09-15",
+    description: "Manufacturing date (YYYY-MM-DD)",
+  })
+  @IsDateString()
+  manufacturingDate: string;
 
   @ApiProperty({
     example: 500,
@@ -85,6 +109,14 @@ export class CreateShipmentDto {
   supplier: string;
 
   @ApiProperty({
+    enum: ShipmentMode,
+    example: ShipmentMode.SEA,
+    description: "Mode of shipment",
+  })
+  @IsEnum(ShipmentMode)
+  shipmentMode: ShipmentMode;
+
+  @ApiProperty({
     example: "2025-09-15",
     required: false,
     description: "Date shipment was received",
@@ -104,7 +136,6 @@ export class CreateShipmentDto {
   })
   @IsOptional()
   documents?: any;
-
   @ApiProperty({
     type: [ShipmentItemDto],
     description: "List of shipment items with nested medicine details",
@@ -112,8 +143,14 @@ export class CreateShipmentDto {
       {
         medicine: {
           name: "Paracetamol",
+          form: MedicineFormEnum.TABLET,
+          manufacturer: "Pfizer",
+          strength: "500mg",
           batchNumber: "BN-2025-001",
           expiryDate: "2026-05-20",
+          manufacturingDate: "2024-09-15",
+          packSize: 100,
+          countryOfManufacture: "India",
           quantity: 500,
           unitCost: 12.5,
         },
@@ -121,8 +158,14 @@ export class CreateShipmentDto {
       {
         medicine: {
           name: "Amoxicillin",
+          form: MedicineFormEnum.CAPSULE,
+          manufacturer: "GSK",
+          strength: "250mg",
           batchNumber: "BN-2025-002",
           expiryDate: "2027-01-10",
+          manufacturingDate: "2025-01-01",
+          packSize: 50,
+          countryOfManufacture: "Germany",
           quantity: 300,
           unitCost: 8.0,
         },

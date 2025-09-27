@@ -311,61 +311,59 @@ export class UserService {
   }
 
   async deleteUser(userId: string): Promise<void> {
-  const user = await this.prisma.user.findUnique({
-    where: { id: userId },
-  });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-  if (!user) {
-    throw new NotFoundException("User not found");
+    if (!user) {
+      throw new NotFoundException("User not found");
+    }
+
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
   }
-
-  await this.prisma.user.delete({
-    where: { id: userId },
-  });
-}
-
 
   /**
    * Generate sequential user code per role.
    */
-private async generateUserCode(role: string): Promise<string> {
-  let prefix = "USR";
+  private async generateUserCode(role: string): Promise<string> {
+    let prefix = "USR";
 
-  switch (role) {
-    case UserType.SUPER_ADMIN:
-      prefix = "NX-ADM";
-      break;
-    case UserType.SALES_ADMIN:
-      prefix = "NX-SAL";
-      break;
-    case UserType.WAREHOUSE_ADMIN:
-      prefix = "NX-WAR";
-      break;
-    case UserType.FINANCE_ADMIN:
-      prefix = "NX-FIN";
-      break;
-  }
-
-  // find the last user with this role
-  const lastUser = await this.prisma.user.findFirst({
-    where: { role },
-    orderBy: { createdAt: "desc" },
-    select: { code: true },
-  });
-
-  let nextNumber = 1;
-
-  if (lastUser?.code) {
-    const parts = lastUser.code.split("-");
-    const lastNumber = parseInt(parts[parts.length - 1], 10); // ✅ safer
-    if (!isNaN(lastNumber)) {
-      nextNumber = lastNumber + 1;
+    switch (role) {
+      case UserType.SUPER_ADMIN:
+        prefix = "NX-ADM";
+        break;
+      case UserType.SALES_ADMIN:
+        prefix = "NX-SAL";
+        break;
+      case UserType.WAREHOUSE_ADMIN:
+        prefix = "NX-WAR";
+        break;
+      case UserType.FINANCE_ADMIN:
+        prefix = "NX-FIN";
+        break;
     }
+
+    // find the last user with this role
+    const lastUser = await this.prisma.user.findFirst({
+      where: { role },
+      orderBy: { createdAt: "desc" },
+      select: { code: true },
+    });
+
+    let nextNumber = 1;
+
+    if (lastUser?.code) {
+      const parts = lastUser.code.split("-");
+      const lastNumber = parseInt(parts[parts.length - 1], 10); // ✅ safer
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+
+    const numberPart = String(nextNumber).padStart(4, "0");
+
+    return `${prefix}-${numberPart}`;
   }
-
-  const numberPart = String(nextNumber).padStart(4, "0");
-
-  return `${prefix}-${numberPart}`;
-}
-
 }

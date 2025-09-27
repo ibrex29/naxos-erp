@@ -16,6 +16,7 @@ export class ShipmentService {
         proformaInvoiceNo: dto.proformaInvoiceNo,
         billOfLading: dto.billOfLading,
         supplier: dto.supplier,
+        shipmentMode: dto.shipmentMode,
         receivedDate: dto.receivedDate ? new Date(dto.receivedDate) : null,
         documents: dto.documents,
         createdById: userId,
@@ -24,14 +25,16 @@ export class ShipmentService {
             batchNumber: item.medicine.batchNumber,
             expiryDate: new Date(item.medicine.expiryDate),
             quantity: item.medicine.quantity,
-            unitCost: item.medicine.unitCost,
+            unitCost: item.medicine.unitCost,          
             medicine: {
               create: {
                 name: item.medicine.name,
                 form: item.medicine.form,
                 manufacturer: item.medicine.manufacturer,
                 strength: item.medicine.strength,
-                
+                manufacturingDate: item.medicine.manufacturingDate,
+                packSize: item.medicine.packSize,
+                countryOfOrigin: item.medicine.countryOfManufacture
               },
             },
           })),

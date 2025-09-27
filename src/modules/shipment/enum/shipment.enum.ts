@@ -16,3 +16,8 @@ export enum MedicineFormEnum {
   SUPPOSITORY = "Suppository",
   POWDER = "Powder",
 }
+export enum ShipmentMode {
+  AIR = "AIR",
+  SEA = "SEA",
+  LAND = "LAND",
+}

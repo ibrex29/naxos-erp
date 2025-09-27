@@ -2,7 +2,7 @@ import { FetchDTO } from "@/common/dto";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { StockMovementType } from "@prisma/client";
 import { IsOptional, IsEnum, IsString } from "class-validator";
-import { DeliveryStatusEnum } from "../../enum/shipment.enu";
+import { DeliveryStatusEnum } from "../../enum/shipment.enum";
 
 export enum ShipmentSortFieldEnum {
   proformaInvoiceNo = "proformaInvoiceNo",

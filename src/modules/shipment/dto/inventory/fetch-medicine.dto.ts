@@ -9,7 +9,7 @@ import {
   IsString,
 } from "class-validator";
 import { Type } from "class-transformer";
-import { MedicineFormEnum } from "../../enum/shipment.enu";
+import { MedicineFormEnum } from "../../enum/shipment.enum";
 
 export enum MedicineSortFieldEnum {
   name = "name",

@@ -6,7 +6,7 @@ import { FetchMedicineDTO } from "../dto/inventory/fetch-medicine.dto";
 
 @Public()
 @ApiTags("Inventory")
-@Controller("inventory")
+@Controller({path: "inventory", version: "1"})
 export class InventoryController {
   constructor(private readonly inventoryService: InventoryService) {}
 
