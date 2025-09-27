@@ -23,24 +23,24 @@ async function main() {
     },
   });
 
-  // --- Seed ADMIN User ---
-  await prisma.user.upsert({
-    where: { email: 'sales@example.com' },
-    update: {},
-    create: {
-      email: 'sales@example.com',
-      isActive: true,
-      password: await bcrypt.hash('SalesPass123!', 10),
-      role: "sales-admin",
-      profile: {
-        create: {
-          firstName: 'John',
-          lastName: 'Doe',
-          phone: '+2348098765432',
-        },
-      },
-    },
-  });
+  // // --- Seed ADMIN User ---
+  // await prisma.user.upsert({
+  //   where: { email: 'sales@example.com' },
+  //   update: {},
+  //   create: {
+  //     email: 'sales@example.com',
+  //     isActive: true,
+  //     password: await bcrypt.hash('SalesPass123!', 10),
+  //     role: "sales-admin",
+  //     profile: {
+  //       create: {
+  //         firstName: 'John',
+  //         lastName: 'Doe',
+  //         phone: '+2348098765432',
+  //       },
+  //     },
+  //   },
+  // });
 
 
  
