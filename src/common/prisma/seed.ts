@@ -1,7 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { User } from '../decorators/param-decorator/User.decorator';
-import { UserType } from '@/modules/user/types';
 
 const prisma = new PrismaClient();
 
@@ -14,7 +12,7 @@ async function main() {
       email: 'admin@example.com',
       isActive: true,
       password: await bcrypt.hash('StrongPassword123!', 10),
-      role: UserType.SUPER_ADMIN,
+      role: "super-admin",
       profile: {
         create: {
           firstName: 'Admin',
@@ -33,7 +31,7 @@ async function main() {
       email: 'sales@example.com',
       isActive: true,
       password: await bcrypt.hash('SalesPass123!', 10),
-      role: UserType.SALES_ADMIN,
+      role: "sales-admin",
       profile: {
         create: {
           firstName: 'John',
