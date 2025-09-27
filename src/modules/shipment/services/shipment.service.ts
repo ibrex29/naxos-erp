@@ -30,7 +30,7 @@ export class ShipmentService {
                 name: item.medicine.name,
                 form: item.medicine.form,
                 manufacturer: item.medicine.manufacturer,
-                strength: item.medicine.strength
+                strength: item.medicine.strength,
                 
               },
             },
