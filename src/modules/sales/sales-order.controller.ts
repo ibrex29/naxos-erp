@@ -27,4 +27,6 @@ export class SalesOrderController {
   async getPaginated(@Query() query: FetchSalesOrderDTO) {
     return this.salesOrderService.getPaginatedOrders(query);
   }
+
+  
 }

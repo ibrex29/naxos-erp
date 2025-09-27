@@ -11,9 +11,12 @@ export class DistributorService {
   constructor(private prisma: PrismaService) {}
 
   async create(dto: CreateDistributorDto, userId: string) {
+    const code = await this.generateDistributorCode("DX");
+
     return this.prisma.distributor.create({
       data: {
         ...dto,
+        code,
         createdById: userId,
         updatedById: userId,
       },
@@ -214,5 +217,28 @@ export class DistributorService {
 
   async remove(id: string) {
     return this.prisma.distributor.delete({ where: { id } });
+  }
+
+  /**
+   * Generates sequential distributor codes like DX0001, DX0002, etc.
+   */
+  private async generateDistributorCode(prefix: string): Promise<string> {
+    const lastDistributor = await this.prisma.distributor.findFirst({
+      orderBy: { createdAt: "desc" },
+      select: { code: true },
+    });
+
+    let nextNumber = 1;
+
+    if (lastDistributor?.code) {
+      const parts = lastDistributor.code.split("-");
+      const lastNumber = parseInt(parts[1], 10);
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+
+    const numberPart = String(nextNumber).padStart(4, "0");
+    return `${prefix}-${numberPart}`;
   }
 }

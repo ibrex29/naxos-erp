@@ -9,34 +9,35 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  password      String
-  role          String    @default("user") 
-  isActive      Boolean   @default(true)
-  isVerified    Boolean   @default(false)
+  id              String  @id @default(uuid())
+  email           String  @unique
+  password        String
+  role            String  @default("user")
+  isActive        Boolean @default(true)
+  isVerified      Boolean @default(false)
   createdByUserId String?
-  code           String?  @unique
+  code            String? @unique
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  deletedAt     DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-  profile       Profile?  @relation("UserProfile")
+  profile Profile? @relation("UserProfile")
 
-  salesOrders   SalesOrder[]
-  shipments     Shipment[]        @relation("ShipmentCreatedBy")
+  salesOrders        SalesOrder[]
+  shipments          Shipment[]    @relation("ShipmentCreatedBy")
   createdDistributor Distributor[] @relation("DistributorCreatedBy")
   updatedDistributor Distributor[] @relation("DistributorUpdatedBy")
 
   @@index([isActive])
   @@map("user")
+  Document Document[]
 }
 
 model Profile {
-  id          String   @id @default(uuid())
-  user        User     @relation("UserProfile", fields: [userId], references: [id])
-  userId      String   @unique
+  id     String @id @default(uuid())
+  user   User   @relation("UserProfile", fields: [userId], references: [id])
+  userId String @unique
 
   firstName   String
   lastName    String
@@ -47,38 +48,39 @@ model Profile {
 }
 
 model Distributor {
-  id          String   @id @default(uuid())
-  name        String
-  type        DistributorType
-  email       String?   @unique
-  phone       String?
-  address     String?
-  isActive    Boolean   @default(true)
+  id       String          @id @default(uuid())
+  name     String
+  code     String?
+  type     DistributorType
+  email    String?         @unique
+  phone    String?
+  address  String?
+  isActive Boolean         @default(true)
 
-  creditLimit Float?    @default(0)
-  currency    Currency  @default(NGN)
+  creditLimit Float?   @default(0)
+  currency    Currency @default(NGN)
 
   salesOrders SalesOrder[]
   payments    Payment[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdBy   User?    @relation("DistributorCreatedBy", fields: [createdById], references: [id])
+  createdBy   User?   @relation("DistributorCreatedBy", fields: [createdById], references: [id])
   createdById String?
 
-  updatedBy   User?    @relation("DistributorUpdatedBy", fields: [updatedById], references: [id])
+  updatedBy   User?   @relation("DistributorUpdatedBy", fields: [updatedById], references: [id])
   updatedById String?
 }
 
 model Medicine {
-  id          String         @id @default(uuid())
-  name        String
-  strength    String?        
-  form        String?       
+  id           String   @id @default(uuid())
+  name         String
+  strength     String?
+  form         String?
   manufacturer String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   shipmentItems ShipmentItem[]
 
@@ -86,83 +88,102 @@ model Medicine {
 }
 
 model Shipment {
-  id                 String        @id @default(uuid())
-  status             StockMovementType @default(IN)
-  deliveryStatus   String        @default("pending")
-  proformaInvoiceNo  String
-  billOfLading       String
-  supplier           String
-  receivedDate       DateTime?
-  documents          Json?        
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
+  id                String            @id @default(uuid())
+  status            StockMovementType @default(IN)
+  deliveryStatus    String            @default("pending")
+  proformaInvoiceNo String
+  billOfLading      String
+  supplier          String
+  receivedDate      DateTime?
+  documents         Json?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
-  items              ShipmentItem[]
+  items ShipmentItem[]
 
-  createdBy   User?  @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
+  createdBy   User?   @relation("ShipmentCreatedBy", fields: [createdById], references: [id])
   createdById String?
 }
 
 model ShipmentItem {
-  id           String    @id @default(uuid())
-  shipmentId   String
-  medicineId   String
-  batchNumber  String
-  expiryDate   DateTime
-  quantity     Int
-  unitCost     Float
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  id          String   @id @default(uuid())
+  shipmentId  String
+  medicineId  String
+  batchNumber String
+  expiryDate  DateTime
+  quantity    Int
+  unitCost    Float
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  shipment     Shipment   @relation(fields: [shipmentId], references: [id])
-  medicine     Medicine   @relation(fields: [medicineId], references: [id])
+  shipment Shipment @relation(fields: [shipmentId], references: [id])
+  medicine Medicine @relation(fields: [medicineId], references: [id])
 }
-
 
 model SalesOrder {
   id            String      @id @default(uuid())
   distributor   Distributor @relation(fields: [distributorId], references: [id])
   distributorId String
 
-  salesRep      User        @relation(fields: [salesRepId], references: [id])
-  salesRepId    String
+  salesRep   User   @relation(fields: [salesRepId], references: [id])
+  salesRepId String
 
-  currency      Currency    @default(NGN)
-  paymentStatus PaymentStatus @default(PENDING)
+  currency        Currency      @default(NGN)
+  paymentStatus   PaymentStatus @default(PENDING)
+  orderAmount     Float?        @default(0)
+  amountPaid      Float?        @default(0)
+  amountRemaining Float?        @default(0)
 
-  items         SalesItem[]
-  payments      Payment[]
+  items    SalesItem[]
+  payments Payment[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SalesItem {
-  id            String      @id @default(uuid())
-  salesOrderId  String
-  medicineId    String
-  quantity      Int
-  unitPrice     Float
+  id           String @id @default(uuid())
+  salesOrderId String
+  medicineId   String
+  quantity     Int
+  unitPrice    Float
 
-  salesOrder    SalesOrder  @relation(fields: [salesOrderId], references: [id])
-  medicine      Medicine    @relation(fields: [medicineId], references: [id])
+  salesOrder SalesOrder @relation(fields: [salesOrderId], references: [id])
+  medicine   Medicine   @relation(fields: [medicineId], references: [id])
 }
 
 model Payment {
-  id          String   @id @default(uuid())
-  amount      Float
-  currency    Currency
-  type        PaymentType 
-  entityType  String    
-  entityId    String
+  id         String      @id @default(uuid())
+  amount     Float
+  currency   Currency
+  type       PaymentType
+  entityType String
+  entityId   String
 
-  distributor Distributor? @relation(fields: [distributorId], references: [id])
+  distributor   Distributor? @relation(fields: [distributorId], references: [id])
   distributorId String?
 
-  salesOrder  SalesOrder? @relation(fields: [salesOrderId], references: [id])
+  salesOrder   SalesOrder? @relation(fields: [salesOrderId], references: [id])
   salesOrderId String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  Document Document[]
+}
+
+model Document {
+  id          String    @id @default(uuid())
+  url         String  
+  fileName    String?
+  mimeType    String?
+  size        Int?    
+  uploadedBy  User?     @relation(fields: [uploadedById], references: [id])
+  uploadedById String?
+
+  payment     Payment?  @relation(fields: [paymentId], references: [id])
+  paymentId   String?
+
+  createdAt   DateTime  @default(now())
 }
 
 enum DistributorType {
