@@ -1,5 +1,5 @@
 import { PrismaService } from "@/common/prisma/prisma.service";
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import {
   CreateDistributorDto,
   UpdateDistributorDto,
@@ -10,18 +10,31 @@ import { FetchDistributorDTO } from "./dto/fetch-distributors.dto";
 export class DistributorService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateDistributorDto, userId: string) {
-    const code = await this.generateDistributorCode("DX");
-
-    return this.prisma.distributor.create({
-      data: {
-        ...dto,
-        code,
-        createdById: userId,
-        updatedById: userId,
-      },
+async create(dto: CreateDistributorDto, userId: string) {
+  // check if email already exists
+  if (dto.email) {
+    const existing = await this.prisma.distributor.findUnique({
+      where: { email: dto.email },
     });
+
+    if (existing) {
+      throw new BadRequestException("Distributor with this email already exists");
+    }
   }
+
+  // generate distributor code
+  const code = await this.generateDistributorCode("DX");
+
+  return this.prisma.distributor.create({
+    data: {
+      ...dto,
+      code,
+      createdById: userId,
+      updatedById: userId,
+    },
+  });
+}
+
 
   async getPaginatedDistributors(query: FetchDistributorDTO) {
     const { search, sortField, sortOrder, type } = query;
