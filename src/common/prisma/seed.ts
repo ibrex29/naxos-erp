@@ -11,6 +11,7 @@ async function main() {
     create: {
       email: 'admin@example.com',
       isActive: true,
+      code: "NX-ADM-0001",
       password: await bcrypt.hash('StrongPassword123!', 10),
       role: "super-admin",
       profile: {
