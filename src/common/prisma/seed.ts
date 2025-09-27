@@ -16,8 +16,8 @@ async function main() {
       role: "super-admin",
       profile: {
         create: {
-          firstName: 'Admin',
-          lastName: 'User',
+          firstName: 'Naxos',
+          lastName: 'Admin',
           phone: '+2348012345678',
         },
       },
