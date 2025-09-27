@@ -328,43 +328,44 @@ export class UserService {
   /**
    * Generate sequential user code per role.
    */
-  private async generateUserCode(role: string): Promise<string> {
-    let prefix = "USR";
+private async generateUserCode(role: string): Promise<string> {
+  let prefix = "USR";
 
-    switch (role) {
-      case UserType.SUPER_ADMIN:
-        prefix = "NX-ADM";
-        break;
-      case UserType.SALES_ADMIN:
-        prefix = "NX-SAL";
-        break;
-      case UserType.WAREHOUSE_ADMIN:
-        prefix = "NX-WAR";
-        break;
-      case UserType.FINANCE_ADMIN:
-        prefix = "NX-FIN";
-        break;
-    }
-
-    // find the last user with this role
-    const lastUser = await this.prisma.user.findFirst({
-      where: { role },
-      orderBy: { createdAt: "desc" },
-      select: { code: true },
-    });
-
-    let nextNumber = 1;
-
-    if (lastUser?.code) {
-      const parts = lastUser.code.split("-");
-      const lastNumber = parseInt(parts[1], 10);
-      if (!isNaN(lastNumber)) {
-        nextNumber = lastNumber + 1;
-      }
-    }
-
-    const numberPart = String(nextNumber).padStart(4, "0");
-
-    return `${prefix}-${numberPart}`;
+  switch (role) {
+    case UserType.SUPER_ADMIN:
+      prefix = "NX-ADM";
+      break;
+    case UserType.SALES_ADMIN:
+      prefix = "NX-SAL";
+      break;
+    case UserType.WAREHOUSE_ADMIN:
+      prefix = "NX-WAR";
+      break;
+    case UserType.FINANCE_ADMIN:
+      prefix = "NX-FIN";
+      break;
   }
+
+  // find the last user with this role
+  const lastUser = await this.prisma.user.findFirst({
+    where: { role },
+    orderBy: { createdAt: "desc" },
+    select: { code: true },
+  });
+
+  let nextNumber = 1;
+
+  if (lastUser?.code) {
+    const parts = lastUser.code.split("-");
+    const lastNumber = parseInt(parts[parts.length - 1], 10); // ✅ safer
+    if (!isNaN(lastNumber)) {
+      nextNumber = lastNumber + 1;
+    }
+  }
+
+  const numberPart = String(nextNumber).padStart(4, "0");
+
+  return `${prefix}-${numberPart}`;
+}
+
 }
