@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -94,5 +95,11 @@ export class UserController {
   @Patch(":id/deactivate")
   async deactivateUser(@Param("id") userId: string) {
     return this.userService.deactivateUser(userId);
+  }
+
+    @Delete(":id")
+  async delete(@Param("id") id: string) {
+    await this.userService.deleteUser(id);
+    return { message: "User deleted successfully" };
   }
 }

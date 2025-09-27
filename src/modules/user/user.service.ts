@@ -262,16 +262,6 @@ export class UserService {
     });
   }
 
-  async deleteUser(userId: string): Promise<User> {
-    await this.validateUserExists(userId);
-
-    return this.prisma.user.delete({
-      where: {
-        id: userId,
-      },
-    });
-  }
-
   async validateUserExists(userId: string): Promise<void> {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
@@ -320,6 +310,21 @@ export class UserService {
     });
   }
 
+  async deleteUser(userId: string): Promise<void> {
+  const user = await this.prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) {
+    throw new NotFoundException("User not found");
+  }
+
+  await this.prisma.user.delete({
+    where: { id: userId },
+  });
+}
+
+
   /**
    * Generate sequential user code per role.
    */
@@ -328,16 +333,16 @@ export class UserService {
 
     switch (role) {
       case UserType.SUPER_ADMIN:
-        prefix = "SUP";
+        prefix = "NX-ADM";
         break;
       case UserType.SALES_ADMIN:
-        prefix = "SAL";
+        prefix = "NX-SAL";
         break;
       case UserType.WAREHOUSE_ADMIN:
-        prefix = "WH";
+        prefix = "NX-WAR";
         break;
       case UserType.FINANCE_ADMIN:
-        prefix = "FIN";
+        prefix = "NX-FIN";
         break;
     }
 
