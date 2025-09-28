@@ -32,7 +32,7 @@ export class ShipmentService {
                 form: item.medicine.form,
                 manufacturer: item.medicine.manufacturer,
                 strength: item.medicine.strength,
-                manufacturingDate: item.medicine.manufacturingDate,
+                manufacturingDate: new Date(item.medicine.manufacturingDate),
                 packSize: item.medicine.packSize,
                 countryOfOrigin: item.medicine.countryOfManufacture
               },
