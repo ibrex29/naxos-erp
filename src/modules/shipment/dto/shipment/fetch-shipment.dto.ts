@@ -44,6 +44,7 @@ export class FetchShipmentDTO extends FetchDTO {
     example: ShipmentMode.SEA,
     description: "Filter by ShipmentMode of shipment",
   })
+  @IsOptional()
   @IsEnum(ShipmentMode)
   shipmentMode: ShipmentMode;
 
