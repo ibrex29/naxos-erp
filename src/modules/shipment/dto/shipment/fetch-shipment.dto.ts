@@ -2,7 +2,7 @@ import { FetchDTO } from "@/common/dto";
 import { ApiPropertyOptional } from "@nestjs/swagger";
 import { StockMovementType } from "@prisma/client";
 import { IsOptional, IsEnum, IsString } from "class-validator";
-import { DeliveryStatusEnum } from "../../enum/shipment.enum";
+import { DeliveryStatusEnum, ShipmentMode } from "../../enum/shipment.enum";
 
 export enum ShipmentSortFieldEnum {
   proformaInvoiceNo = "proformaInvoiceNo",
@@ -30,7 +30,7 @@ export class FetchShipmentDTO extends FetchDTO {
   @IsString()
   search?: string;
 
-    @ApiPropertyOptional({
+  @ApiPropertyOptional({
     description: "Filter by stock movement type",
     enum: StockMovementType,
     example: StockMovementType.IN,
@@ -40,6 +40,14 @@ export class FetchShipmentDTO extends FetchDTO {
   status?: StockMovementType;
 
   @ApiPropertyOptional({
+    enum: ShipmentMode,
+    example: ShipmentMode.SEA,
+    description: "Filter by ShipmentMode of shipment",
+  })
+  @IsEnum(ShipmentMode)
+  shipmentMode: ShipmentMode;
+
+  @ApiPropertyOptional({
     description: "Filter by delivery status",
     enum: DeliveryStatusEnum,
     example: DeliveryStatusEnum.PENDING,
@@ -47,5 +55,4 @@ export class FetchShipmentDTO extends FetchDTO {
   @IsOptional()
   @IsEnum(DeliveryStatusEnum)
   deliveryStatus?: DeliveryStatusEnum;
-
 }

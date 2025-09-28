@@ -25,7 +25,7 @@ export class ShipmentService {
             batchNumber: item.medicine.batchNumber,
             expiryDate: new Date(item.medicine.expiryDate),
             quantity: item.medicine.quantity,
-            unitCost: item.medicine.unitCost,          
+            unitCost: item.medicine.unitCost,
             medicine: {
               create: {
                 name: item.medicine.name,
@@ -34,7 +34,7 @@ export class ShipmentService {
                 strength: item.medicine.strength,
                 manufacturingDate: new Date(item.medicine.manufacturingDate),
                 packSize: item.medicine.packSize,
-                countryOfOrigin: item.medicine.countryOfManufacture
+                countryOfOrigin: item.medicine.countryOfManufacture,
               },
             },
           })),
@@ -49,7 +49,14 @@ export class ShipmentService {
   }
 
   async getPaginatedShipments(query: FetchShipmentDTO) {
-    const { search, sortField, sortOrder, status, deliveryStatus } = query;
+    const {
+      search,
+      sortField,
+      sortOrder,
+      status,
+      deliveryStatus,
+      shipmentMode,
+    } = query;
 
     const where: Prisma.ShipmentWhereInput = {};
 
@@ -65,6 +72,10 @@ export class ShipmentService {
     }
     if (deliveryStatus) {
       where.deliveryStatus = deliveryStatus;
+    }
+
+    if (shipmentMode) {
+      where.shipmentMode = shipmentMode;
     }
 
     const orderBy: Prisma.ShipmentOrderByWithRelationInput = sortField
@@ -93,18 +104,21 @@ export class ShipmentService {
   }
 
   async updateDeliveryStatus(id: string, dto: UpdateDeliveryStatusDTO) {
-  return this.prisma.shipment.update({
-    where: { id },
-    data: {
-      deliveryStatus: dto.deliveryStatus,
-    },
-    include: {
-      items: { include: { medicine: true } },
-      createdBy: {
-        select: { id: true, email: true, profile: { select: { firstName: true, lastName: true } } },
+    return this.prisma.shipment.update({
+      where: { id },
+      data: {
+        deliveryStatus: dto.deliveryStatus,
       },
-    },
-  });
-}
-
+      include: {
+        items: { include: { medicine: true } },
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { firstName: true, lastName: true } },
+          },
+        },
+      },
+    });
+  }
 }
