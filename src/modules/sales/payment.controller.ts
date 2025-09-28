@@ -6,19 +6,25 @@ import {
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { CreatePaymentDto } from "./dto/create-payment.dto";
 import { SalesOrderService } from "./sales-order.service";
+import { SessionUser } from "../auth/types";
+import { PaymentService } from "./payment.service";
+import { User } from "@/common/decorators/param-decorator/User.decorator";
 
 @ApiBearerAuth()
 @ApiTags("Payments")
 @Controller({ path: "payments", version: "1"})
 export class PaymentController {
-  constructor(private readonly paymentService: SalesOrderService) {}
+  constructor(private readonly paymentService: PaymentService) {}
 
   // 💰 Create payment
   @Post()
   @ApiOperation({ summary: "Create a new payment" })
   @ApiResponse({ status: 201, description: "Payment created successfully" })
-  async create(@Body() dto: CreatePaymentDto) {
-    return this.paymentService.createPayment(dto);
+  async create(
+    @Body() dto: CreatePaymentDto,
+    @User() user: SessionUser
+) {
+    return this.paymentService.createPayment(dto,user.userId);
   }
 
   // // 📜 Get all payments for a sales order

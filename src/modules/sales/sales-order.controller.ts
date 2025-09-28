@@ -3,13 +3,12 @@ import { SalesOrderService } from "./sales-order.service";
 import { CreateSalesOrderDto } from "./dto/create-sales-order.dto";
 import { FetchSalesOrderDTO } from "./dto/fetch-sales-order.dto";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { use } from "passport";
 import { SessionUser } from "../auth/types";
 import { User } from "@/common/decorators/param-decorator/User.decorator";
 
 @ApiTags("Sales Orders")
 @ApiBearerAuth()
-@Controller("sales-orders")
+@Controller({ path: "sales-orders", version: "1"})
 export class SalesOrderController {
   constructor(private readonly salesOrderService: SalesOrderService) {}
 
