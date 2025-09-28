@@ -61,7 +61,7 @@ export class MedicineDto {
     description: "Country where the medicine was manufactured",
   })
   @IsString()
-  countryOfManufacture: string;
+  countryOfOrigin: string;
 
   @ApiProperty({
     example: "2024-09-15",

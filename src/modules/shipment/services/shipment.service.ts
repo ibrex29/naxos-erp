@@ -34,7 +34,7 @@ export class ShipmentService {
                 strength: item.medicine.strength,
                 manufacturingDate: new Date(item.medicine.manufacturingDate),
                 packSize: item.medicine.packSize,
-                countryOfOrigin: item.medicine.countryOfManufacture,
+                countryOfOrigin: item.medicine.countryOfOrigin,
               },
             },
           })),
