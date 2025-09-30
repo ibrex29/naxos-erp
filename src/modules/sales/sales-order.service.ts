@@ -46,6 +46,7 @@ export class SalesOrderService {
         salesRepId: userId,
         currency: dto.currency,
         orderAmount,
+        amountRemaining:orderAmount,
         paymentStatus: dto.paymentStatus,
         items: { create: items },
       },
@@ -120,7 +121,6 @@ export class SalesOrderService {
         allSalesItems = [...allSalesItems, ...deducted];
       }
 
-      // Create the order with deducted sales items
       const order = await this.createOrder(tx, dto, userId, allSalesItems);
       return order;
     });
