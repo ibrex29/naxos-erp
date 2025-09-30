@@ -6,6 +6,7 @@ import {
   ValidateNested,
   IsNumber,
   IsEnum,
+  IsUUID,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
@@ -20,22 +21,24 @@ export class MedicineDto {
     enum: MedicineFormEnum,
     example: MedicineFormEnum.TABLET,
     description: "Dosage form of the medicine",
+    required: false,
   })
   @IsEnum(MedicineFormEnum)
   @IsOptional()
-  form: MedicineFormEnum;
+  form?: MedicineFormEnum;
 
   @ApiProperty({
-    example: "Pfizer",
-    description: "Manufacturer of the medicine",
+    example: "UUID of an existing manufacturer",
+    description: "Link to the manufacturer entity",
+    required: false,
   })
-  @IsString()
-  @IsOptional()
-  manufacturer: string;
+  @IsUUID()
+  @IsOptional() // 🔥 remove IsNotEmpty to match Prisma
+  manufacturerId?: string;
 
-  @ApiProperty({ example: "500mg", description: "Strength of the medicine" })
-  @IsOptional()
+  @ApiProperty({ example: "500mg", description: "Strength of the medicine", required: false })
   @IsString()
+  @IsOptional()
   strength?: string;
 
   @ApiProperty({ example: "BN-2025-001", description: "Batch number" })
@@ -52,23 +55,20 @@ export class MedicineDto {
   @ApiProperty({
     example: 100,
     description: "Pack size (e.g., number of tablets/capsules per pack)",
+    required: false,
   })
+  @IsOptional()
   @IsNumber()
-  packSize: number;
-
-  @ApiProperty({
-    example: "India",
-    description: "Country where the medicine was manufactured",
-  })
-  @IsString()
-  countryOfOrigin: string;
+  packSize?: number;
 
   @ApiProperty({
     example: "2024-09-15",
     description: "Manufacturing date (YYYY-MM-DD)",
+    required: false,
   })
+  @IsOptional()
   @IsDateString()
-  manufacturingDate: string;
+  manufacturingDate?: string;
 
   @ApiProperty({
     example: 500,
@@ -80,7 +80,12 @@ export class MedicineDto {
   @ApiProperty({ example: 12.5, description: "Unit cost per medicine" })
   @IsNumber()
   unitCost: number;
+
+  @ApiProperty({ example: 12.5, description: "Unit cost per medicine" })
+  @IsNumber()
+  unitCostToBeSold: number;
 }
+
 
 class ShipmentItemDto {
   @ApiProperty({
@@ -136,6 +141,7 @@ export class CreateShipmentDto {
   })
   @IsOptional()
   documents?: any;
+
   @ApiProperty({
     type: [ShipmentItemDto],
     description: "List of shipment items with nested medicine details",
@@ -144,30 +150,29 @@ export class CreateShipmentDto {
         medicine: {
           name: "Paracetamol",
           form: MedicineFormEnum.TABLET,
-          manufacturer: "Pfizer",
+          manufacturerId: "3d6c9f0c-62b2-4c8e-9a39-d2a6f52d0f11",
           strength: "500mg",
           batchNumber: "BN-2025-001",
           expiryDate: "2026-05-20",
           manufacturingDate: "2024-09-15",
           packSize: 100,
-          countryOfManufacture: "India",
           quantity: 500,
           unitCost: 12.5,
+          unitCostToBeSold: 12.5,
         },
       },
       {
         medicine: {
           name: "Amoxicillin",
           form: MedicineFormEnum.CAPSULE,
-          manufacturer: "GSK",
+          manufacturerId: "3d6c9f0c-62b2-4c8e-9a39-d2a6f52d0f11",
           strength: "250mg",
           batchNumber: "BN-2025-002",
           expiryDate: "2027-01-10",
           manufacturingDate: "2025-01-01",
           packSize: 50,
-          countryOfManufacture: "Germany",
           quantity: 300,
-          unitCost: 8.0,
+          unitCostToBeSold: 8.0,
         },
       },
     ],

@@ -29,9 +29,12 @@ model User {
   createdDistributor Distributor[] @relation("DistributorCreatedBy")
   updatedDistributor Distributor[] @relation("DistributorUpdatedBy")
   Document           Document[]
+  createdManufacturer Manufacturer[] @relation("ManufacturerCreatedBy")
+  updatedManufacturer Manufacturer[] @relation("ManufacturerUpdatedBy")
 
   @@index([isActive])
   @@map("user")
+
 }
 
 model Profile {
@@ -78,8 +81,6 @@ model Medicine {
   name         String
   strength     String?
   form         String?
-  manufacturer String?
-
   manufacturingDate DateTime?
   packSize          Int?
   countryOfOrigin   String?
@@ -88,8 +89,30 @@ model Medicine {
   updatedAt DateTime @updatedAt
 
   shipmentItems ShipmentItem[]
-
   SalesItem SalesItem[]
+  manufacturer    Manufacturer? @relation(fields: [manufacturerId], references: [id])
+  manufacturerId  String?
+}
+
+model Manufacturer {
+  id       String   @id @default(uuid())
+  name     String
+  code     String?  @unique
+  email    String?  @unique
+  phone    String?
+  address  String?
+  country  String?
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy   User?   @relation("ManufacturerCreatedBy", fields: [createdById], references: [id])
+  createdById String?
+  updatedBy   User?   @relation("ManufacturerUpdatedBy", fields: [updatedById], references: [id])
+  updatedById String?
+
+  medicines Medicine[]
 }
 
 model Shipment {
@@ -119,6 +142,7 @@ model ShipmentItem {
   expiryDate  DateTime
   quantity    Int
   unitCost    Float
+  unitCostToBeSold  Float?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

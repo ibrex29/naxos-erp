@@ -16,6 +16,7 @@ import { UploadModule } from "./common/upload/upload.module";
 import { DistributorModule } from "./modules/distributor/distributor.module";
 import { ShipmentModule } from "./modules/shipment/shipment.module";
 import { SalesOrderModule } from "./modules/sales/sales-order.module";
+import { ManufacturerModule } from "./modules/manufacturer/manufacturer.module";
 
 @Module({
   imports: [
@@ -52,7 +53,8 @@ import { SalesOrderModule } from "./modules/sales/sales-order.module";
     UploadModule,
     DistributorModule,
     ShipmentModule,
-    SalesOrderModule
+    SalesOrderModule,
+    ManufacturerModule
   ],
 })
 export class AppModule {}

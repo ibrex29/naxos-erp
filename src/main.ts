@@ -38,10 +38,7 @@ async function bootstrap() {
     new ClassSerializerInterceptor(app.get('Reflector')),
   );
 
-
   app.use('/assets', express.static(join(process.cwd(), 'upload', 'assets')));
-
-
 
   const options = new DocumentBuilder()
     .setTitle('Naxos ERP Backend API')

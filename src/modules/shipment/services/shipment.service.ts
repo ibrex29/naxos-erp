@@ -26,25 +26,23 @@ export class ShipmentService {
             expiryDate: new Date(item.medicine.expiryDate),
             quantity: item.medicine.quantity,
             unitCost: item.medicine.unitCost,
+            unitCostToBeSold: item.medicine.unitCostToBeSold,
             medicine: {
               create: {
                 name: item.medicine.name,
                 form: item.medicine.form,
-                manufacturer: item.medicine.manufacturer,
                 strength: item.medicine.strength,
                 manufacturingDate: new Date(item.medicine.manufacturingDate),
                 packSize: item.medicine.packSize,
-                countryOfOrigin: item.medicine.countryOfOrigin,
+                manufacturer: item.medicine.manufacturerId
+                  ? { connect: { id: item.medicine.manufacturerId } }
+                  : undefined,
               },
             },
           })),
         },
       },
-      include: {
-        items: {
-          include: { medicine: true },
-        },
-      },
+      include: { items: { include: { medicine: true } } },
     });
   }
 
