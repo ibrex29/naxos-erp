@@ -19,7 +19,7 @@ jobs:
           cat <<EOF > .env
           DATABASE_URL="postgresql://postgres:exist@db:5432/bolle?schema=public"
           PORT=8000
-          HTTP_TIMEOUT=5000
+          HTTP_TIMEOUT=5006
           HTTP_MAX_REDIRECTS=5
           JWT_ACCESS_SECRET="your_jwt_access_secret"
           JWT_REFRESH_SECRET="your_jwt_refresh_secret"
