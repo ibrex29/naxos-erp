@@ -1,0 +1,46 @@
+name: naxos
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Create .env file with hardcoded values
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          DATABASE_URL="postgresql://postgres:exist@db:5432/bolle?schema=public"
+          PORT=8000
+          HTTP_TIMEOUT=5000
+          HTTP_MAX_REDIRECTS=5
+          JWT_ACCESS_SECRET="your_jwt_access_secret"
+          JWT_REFRESH_SECRET="your_jwt_refresh_secret"
+          JWT_ACCESS_EXPIRY="1h"
+          JWT_REFRESH_EXPIRY="24h"
+          THROTTLE_TTL=60
+          THROTTLE_LIMIT=20
+          EOF
+
+      # Step 3: Build Docker images
+      - name: Build Docker Compose
+        run: docker compose build --no-cache
+
+      # Step 4: Start containers
+      - name: Start Docker containers
+        run: docker compose up -d --remove-orphans
+
+      # Step 5: Run Prisma migrations
+      - name: Run Prisma Migrations
+        run: docker exec -i naxos-backend yarn prisma migrate deploy
+
+      # Step 6: Show running containers
+      - name: Check running containers
+        run: docker ps -a
