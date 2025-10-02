@@ -10,18 +10,18 @@ services:
     depends_on:
       - db
 
-  db:
-    image: postgres:15-alpine
-    container_name: naxos-postgres
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: exist
-      POSTGRES_DB: bolle
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: naxos-postgres
+  #   restart: always
+  #   ports:
+  #     - "5432:5432"
+  #   environment:
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: exist
+  #     POSTGRES_DB: bolle
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:
