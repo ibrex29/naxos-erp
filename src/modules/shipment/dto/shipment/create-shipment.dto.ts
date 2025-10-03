@@ -7,6 +7,7 @@ import {
   IsNumber,
   IsEnum,
   IsUUID,
+  ValidateIf,
 } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
@@ -33,10 +34,14 @@ export class MedicineDto {
     required: false,
   })
   @IsUUID()
-  @IsOptional() // 🔥 remove IsNotEmpty to match Prisma
+  @IsOptional()
   manufacturerId?: string;
 
-  @ApiProperty({ example: "500mg", description: "Strength of the medicine", required: false })
+  @ApiProperty({
+    example: "500mg",
+    description: "Strength of the medicine",
+    required: false,
+  })
   @IsString()
   @IsOptional()
   strength?: string;
@@ -77,15 +82,24 @@ export class MedicineDto {
   @IsNumber()
   quantity: number;
 
-  @ApiProperty({ example: 12.5, description: "Unit cost per medicine" })
+  @ApiProperty({
+    example: 12.5,
+    description: "Unit cost per medicine",
+    required: false,
+  })
+  @ValidateIf((o) => o.unitCostToBeSold === undefined)
   @IsNumber()
-  unitCost: number;
+  unitCost?: number;
 
-  @ApiProperty({ example: 12.5, description: "Unit cost per medicine" })
+  @ApiProperty({
+    example: 12.5,
+    description: "Unit cost at which medicine will be sold",
+    required: false,
+  })
+  @ValidateIf((o) => o.unitCost === undefined)
   @IsNumber()
-  unitCostToBeSold: number;
+  unitCostToBeSold?: number;
 }
-
 
 class ShipmentItemDto {
   @ApiProperty({
@@ -105,7 +119,10 @@ export class CreateShipmentDto {
   @IsString()
   proformaInvoiceNo: string;
 
-  @ApiProperty({ example: "BL-2025-012", description: "Bill of Lading number" })
+  @ApiProperty({
+    example: "BL-2025-012",
+    description: "Bill of Lading number",
+  })
   @IsString()
   billOfLading: string;
 
@@ -172,6 +189,7 @@ export class CreateShipmentDto {
           manufacturingDate: "2025-01-01",
           packSize: 50,
           quantity: 300,
+          unitCost: 12.5,
           unitCostToBeSold: 8.0,
         },
       },
