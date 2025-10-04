@@ -43,6 +43,22 @@ export class ShipmentController {
     return this.shipmentService.getPaginatedShipments(query);
   }
 
+    @Get(':id')
+  async getShipmentById(@Param('id') id: string) {
+    const shipment = await this.shipmentService.getShipmentById(id);
+    if (!shipment) {
+      return {
+        success: false,
+        message: `Shipment with ID ${id} not found`,
+      };
+    }
+    return {
+      success: true,
+      message: 'Shipment fetched successfully',
+      data: shipment,
+    };
+  }
+
   @Patch(":id/delivery-status")
   @ApiOperation({ summary: "Update the delivery status of a shipment" })
   async updateDeliveryStatus(
