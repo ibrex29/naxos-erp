@@ -65,16 +65,10 @@ export class ShipmentService {
         { supplier: { contains: search, mode: "insensitive" } },
       ];
     }
-    if (status) {
-      where.status = status;
-    }
-    if (deliveryStatus) {
-      where.deliveryStatus = deliveryStatus;
-    }
 
-    if (shipmentMode) {
-      where.shipmentMode = shipmentMode;
-    }
+    if (status) where.status = status;
+    if (deliveryStatus) where.deliveryStatus = deliveryStatus;
+    if (shipmentMode) where.shipmentMode = shipmentMode;
 
     const orderBy: Prisma.ShipmentOrderByWithRelationInput = sortField
       ? { [sortField]: sortOrder || "desc" }
@@ -94,7 +88,55 @@ export class ShipmentService {
         },
         items: {
           include: {
-            medicine: true,
+            medicine: {
+              include: {
+                manufacturer: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                    email: true,
+                    phone: true,
+                    address: true,
+                    country: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  async getShipmentById(id: string) {
+    return this.prisma.shipment.findUnique({
+      where: { id },
+      include: {
+        createdBy: {
+          select: {
+            id: true,
+            email: true,
+            profile: { select: { firstName: true, lastName: true } },
+          },
+        },
+        items: {
+          include: {
+            medicine: {
+              include: {
+                manufacturer: {
+                  select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                    email: true,
+                    phone: true,
+                    address: true,
+                    country: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
