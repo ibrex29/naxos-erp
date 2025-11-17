@@ -11,7 +11,7 @@ import {
 } from "class-validator";
 import { Type } from "class-transformer";
 import { ApiProperty } from "@nestjs/swagger";
-import { MedicineFormEnum, ShipmentMode } from "../../enum/shipment.enum";
+import { MedicineFormEnum, ShipmentMode, ShipmentUnitType } from "../../enum/shipment.enum";
 
 export class MedicineDto {
   @ApiProperty({ example: "Paracetamol", description: "Medicine name" })
@@ -99,6 +99,14 @@ export class MedicineDto {
   @ValidateIf((o) => o.unitCost === undefined)
   @IsNumber()
   unitCostToBeSold?: number;
+
+  @ApiProperty({
+    enum: ShipmentUnitType,
+    example: ShipmentUnitType.SINGLE_PACK,
+    description: "Unit type of the medicine (single pack, box, or carton)",
+  })
+  @IsEnum(ShipmentUnitType)
+  unitType: ShipmentUnitType;
 }
 
 class ShipmentItemDto {
@@ -176,6 +184,7 @@ export class CreateShipmentDto {
           quantity: 500,
           unitCost: 12.5,
           unitCostToBeSold: 12.5,
+          unitType: ShipmentUnitType.CARTON,
         },
       },
       {
@@ -191,6 +200,7 @@ export class CreateShipmentDto {
           quantity: 300,
           unitCost: 12.5,
           unitCostToBeSold: 8.0,
+          unitType: ShipmentUnitType.BOX,
         },
       },
     ],

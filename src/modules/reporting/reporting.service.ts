@@ -1,8 +1,8 @@
-// src/modules/reporting/reporting.service.ts
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { AccountStatementDto } from "./dto/account-statement.dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Transaction } from "./interfaces/transaction.interface";
+import { StockSummaryDto } from "./dto/stock-summary.dto";
 
 @Injectable()
 export class ReportingService {
@@ -12,7 +12,6 @@ export class ReportingService {
     const startDate = dto.startDate ? new Date(dto.startDate) : new Date("2000-01-01");
     const endDate = dto.endDate ? new Date(dto.endDate) : new Date();
 
-    // 1. Distributor Info
     const distributor = await this.prisma.distributor.findUnique({
       where: { id: dto.distributorId },
       select: {
@@ -164,6 +163,127 @@ export class ReportingService {
         outstandingBalance,
       },
       transactions,
+    };
+  }
+
+async getStockSummary(dto: StockSummaryDto) {
+    const startDate = dto.startDate ? new Date(dto.startDate) : new Date("2000-01-01");
+    const endDate = dto.endDate ? new Date(dto.endDate) : new Date();
+
+    /**
+     * STEP 1: Fetch Received Stock (Shipment → ShipmentItem → Medicine)
+     */
+    const received = await this.prisma.shipmentItem.findMany({
+      where: {
+        createdAt: { gte: startDate, lte: endDate },
+        ...(dto.medicineId ? { medicineId: dto.medicineId } : {}),
+        shipment: dto.shipmentMode ? { shipmentMode: dto.shipmentMode } : {},
+        medicine: dto.manufacturerId ? { manufacturerId: dto.manufacturerId } : {},
+      },
+      select: {
+        quantity: true,
+        unitCost: true,
+        unitCostToBeSold: true,
+        medicine: {
+          select: {
+            id: true,
+            name: true,
+            strength: true,
+            form: true,
+            packSize: true,
+            manufacturingDate: true,
+            countryOfOrigin: true,
+            manufacturer: {
+              select: {
+                id: true,
+                name: true,
+                country: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    /**
+     * STEP 2: Fetch Sold Stock (SalesOrder → SalesItem → Medicine)
+     */
+    const sold = await this.prisma.salesItem.findMany({
+      where: {
+        salesOrder: { createdAt: { gte: startDate, lte: endDate } },
+        ...(dto.medicineId ? { medicineId: dto.medicineId } : {}),
+        medicine: dto.manufacturerId ? { manufacturerId: dto.manufacturerId } : {},
+      },
+      select: {
+        quantity: true,
+        unitPrice: true,
+        medicine: {
+          select: {
+            id: true,
+            name: true,
+            strength: true,
+            form: true,
+            packSize: true,
+            manufacturingDate: true,
+            countryOfOrigin: true,
+            manufacturer: {
+              select: {
+                id: true,
+                name: true,
+                country: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    /**
+     * STEP 3: Aggregate per Medicine
+     */
+    const summary: Record<string, any> = {};
+
+    // Received stock
+    for (const r of received) {
+      const mId = r.medicine.id;
+      if (!summary[mId]) {
+        summary[mId] = {
+          medicine: r.medicine,
+          totalReceived: 0,
+          totalSold: 0,
+          currentBalance: 0,
+          stockValue: 0,
+        };
+      }
+      summary[mId].totalReceived += r.quantity;
+      summary[mId].stockValue += (r.unitCostToBeSold ?? r.unitCost ?? 0) * r.quantity;
+    }
+
+    // Sold stock
+    for (const s of sold) {
+      const mId = s.medicine.id;
+      if (!summary[mId]) {
+        summary[mId] = {
+          medicine: s.medicine,
+          totalReceived: 0,
+          totalSold: 0,
+          currentBalance: 0,
+          stockValue: 0,
+        };
+      }
+      summary[mId].totalSold += s.quantity;
+    }
+
+    // Calculate final balance
+    Object.values(summary).forEach((item: any) => {
+      item.currentBalance = item.totalReceived - item.totalSold;
+    });
+
+    return {
+      filters: dto,
+      generatedAt: new Date(),
+      totalMedicines: Object.keys(summary).length,
+      items: Object.values(summary),
     };
   }
 }

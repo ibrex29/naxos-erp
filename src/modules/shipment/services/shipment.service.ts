@@ -26,6 +26,7 @@ export class ShipmentService {
             expiryDate: new Date(item.medicine.expiryDate),
             quantity: item.medicine.quantity,
             unitCost: item.medicine.unitCost,
+            unitType: item.medicine.unitType,
             unitCostToBeSold: item.medicine.unitCostToBeSold,
             medicine: {
               create: {

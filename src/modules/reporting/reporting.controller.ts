@@ -3,6 +3,7 @@ import { ReportingService } from "./reporting.service";
 import { AccountStatementDto } from "./dto/account-statement.dto";
 import { ApiBearerAuth, ApiTags } from "@nestjs/swagger";
 import { Public } from "@/common/constants/routes.constant";
+import { StockSummaryDto } from "./dto/stock-summary.dto";
 
 @Public()
 @ApiBearerAuth()
@@ -15,4 +16,9 @@ export class ReportingController {
   async getAccountStatement(@Query() dto: AccountStatementDto) {
     return this.reportingService.getCustomerAccountStatement(dto);
   }
+
+  @Get("stock-summary")
+async getStockSummary(@Query() dto: StockSummaryDto) {
+  return this.reportingService.getStockSummary(dto);
+}
 }

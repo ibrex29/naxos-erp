@@ -21,3 +21,8 @@ export enum ShipmentMode {
   SEA = "SEA",
   LAND = "LAND",
 }
+export enum ShipmentUnitType {
+  SINGLE_PACK = "SINGLE_PACK",
+  BOX = "BOX",
+  CARTON = "CARTON",
+}
