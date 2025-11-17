@@ -17,6 +17,7 @@ import { DistributorModule } from "./modules/distributor/distributor.module";
 import { ShipmentModule } from "./modules/shipment/shipment.module";
 import { SalesOrderModule } from "./modules/sales/sales-order.module";
 import { ManufacturerModule } from "./modules/manufacturer/manufacturer.module";
+import { ReportingModule } from "./modules/reporting/reporting.module";
 
 @Module({
   imports: [
@@ -54,7 +55,8 @@ import { ManufacturerModule } from "./modules/manufacturer/manufacturer.module";
     DistributorModule,
     ShipmentModule,
     SalesOrderModule,
-    ManufacturerModule
+    ManufacturerModule,
+    ReportingModule
   ],
 })
 export class AppModule {}
