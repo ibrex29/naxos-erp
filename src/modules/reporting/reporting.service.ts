@@ -3,6 +3,7 @@ import { AccountStatementDto } from "./dto/account-statement.dto";
 import { PrismaService } from "@/common/prisma/prisma.service";
 import { Transaction } from "./interfaces/transaction.interface";
 import { StockSummaryDto } from "./dto/stock-summary.dto";
+import { PaymentRegisterQueryDto } from "./dto/payment-register.dto";
 
 @Injectable()
 export class ReportingService {
@@ -284,6 +285,57 @@ async getStockSummary(dto: StockSummaryDto) {
       generatedAt: new Date(),
       totalMedicines: Object.keys(summary).length,
       items: Object.values(summary),
+    };
+  }
+
+   async paymentRegister(query: PaymentRegisterQueryDto) {
+    const { fromDate, toDate, paymentType, currency, distributorId, salesOrderId, page, limit } = query;
+
+    const filters: any = {};
+
+    if (fromDate || toDate) {
+      filters.createdAt = {};
+      if (fromDate) filters.createdAt.gte = new Date(fromDate);
+      if (toDate) filters.createdAt.lte = new Date(toDate + "T23:59:59Z");
+    }
+
+    if (paymentType) filters.type = paymentType;
+    if (currency) filters.currency = currency;
+    if (distributorId) filters.distributorId = distributorId;
+    if (salesOrderId) filters.salesOrderId = salesOrderId;
+
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.payment.findMany({
+        where: filters,
+        include: {
+          distributor: true,
+          salesOrder: true,
+        },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      this.prisma.payment.count({ where: filters }),
+    ]);
+
+    return {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+      items: items.map((p) => ({
+        id: p.id,
+        date: p.createdAt,
+        amount: p.amount,
+        type: p.type,
+        currency: p.currency,
+        distributorName: p.distributor?.name ?? null,
+        salesOrderId: p.salesOrderId,
+        entityType: p.entityType,
+        entityId: p.entityId,
+      })),
     };
   }
 }
